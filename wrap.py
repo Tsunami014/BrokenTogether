@@ -8,6 +8,7 @@ if not sync.is_synced():
     exit()
 
 import os
+import pygame
 from BlazeSudio.Game import world
 from BlazeSudio.utils import wrap
 
@@ -19,27 +20,56 @@ world = world.World("./assets/planets.ldtk")
 imgs = [[], []]
 szes = []
 for lvl in range(len(world.ldtk.levels)):
-    Ro = None
-    Ri = None
-    size = 128
+    # All the Nones are the default values set by the function
+    WRo = None
+    WRi = None
+    Wsize = 128
+    Wquality = None
+
+    Rrotation = 0
+    Rsize = None
+
     settingsExists = False
+    wraping = False
     for e in world.ldtk.levels[lvl].entities:
-        if e.identifier == 'Settings':
+        if e.identifier == 'WrapSettings':
+            wraping = True
             settingsExists = True
             for i in e.fieldInstances:
                 if i['__identifier'] == 'Ro':
-                    Ro = i['__value'] or Ro
-                if i['__identifier'] == 'Ri':
-                    Ri = i['__value'] or Ri
-                if i['__identifier'] == 'size':
-                    size = i['__value'] or size
+                    WRo = i['__value'] or WRo
+                elif i['__identifier'] == 'Ri':
+                    WRi = i['__value'] or WRi
+                elif i['__identifier'] == 'Size':
+                    Wsize = i['__value'] or Wsize
+                elif i['__identifier'] == 'Quality':
+                    Wquality = i['__value'] or Wquality
+        elif e.identifier == 'RotateSettings':
+            settingsExists = True
+            for i in e.fieldInstances:
+                if i['__identifier'] == 'Rotation':
+                    Rrotation = i['__value'] or Rrotation
+                elif i['__identifier'] == 'Size':
+                    Rsize = i['__value'] or Rsize
     if not settingsExists:
         continue
-    szes.append(size)
+    if wraping:
+        szes.append(Wsize)
 
-    i1, i2 = wrap.wrapLevel(world, lvl)
-    imgs[0].append(i1)
-    imgs[1].append(i2)
+        i1, i2 = wrap.wrapLevel(world, lvl, WRo, WRi, Wquality)
+        imgs[0].append(i1)
+        imgs[1].append(i2)
+    else: # Rotating
+        def makeImg():
+            img = pygame.transform.rotate(world.get_pygame(lvl, transparent_bg=True), Rrotation)
+            newimg = pygame.Surface((max(img.get_size()), max(img.get_size())), pygame.SRCALPHA)
+            newimg.blit(img, (0, 0))
+            return newimg
+        imgs[0].append(makeImg())
+        for i in world.get_level(lvl).layers:
+            i.tileset = None  # So it has to render blocks instead >:)
+        imgs[1].append(makeImg())
+        szes.append(Rsize or max(imgs[0][-1].get_size()))
 
 pth = os.path.dirname(__file__) + "/"
 
