@@ -96,7 +96,7 @@ class MainGameScene(Ss.BaseScene):
     def collider(self):
         if self._collider is not None:
             return self._collider
-        lay = self.Game.currentLvL.layers[1]
+        lay = self.Game.currentLvL.GetLayerById('Planets')
         tmpl = ldtk.layer(lay.data, lay.level)
         d = lay.tileset.data.copy()
         d.update({'relPath': d['relPath'] + '/../colls.png'})
