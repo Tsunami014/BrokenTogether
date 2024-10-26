@@ -50,7 +50,7 @@ for lvl in range(len(world.ldtk.levels)):
                 if i['__identifier'] == 'Rotation':
                     Rrotation = i['__value'] or Rrotation
                 elif i['__identifier'] == 'Size':
-                    Rsize = i['__value'] or Rsize
+                    Rsize = i['__value']
     if not settingsExists:
         continue
     if wraping:
@@ -60,15 +60,13 @@ for lvl in range(len(world.ldtk.levels)):
         imgs[0].append(i1)
         imgs[1].append(i2)
     else: # Rotating
-        def makeImg():
-            img = pygame.transform.rotate(world.get_pygame(lvl, transparent_bg=True), Rrotation)
-            newimg = pygame.Surface((max(img.get_size()), max(img.get_size())), pygame.SRCALPHA)
-            newimg.blit(img, (0, 0))
-            return newimg
-        imgs[0].append(makeImg())
-        for i in world.get_level(lvl).layers:
-            i.tileset = None  # So it has to render blocks instead >:)
-        imgs[1].append(makeImg())
+        img = pygame.transform.rotate(world.get_pygame(lvl, transparent_bg=True), Rrotation)
+        newimg = pygame.Surface((max(img.get_size()), max(img.get_size())), pygame.SRCALPHA)
+        newimg.blit(img, (0, 0))
+        imgs[0].append(newimg)
+        newsur = pygame.mask.from_surface(newimg).to_surface()
+        newsur.set_colorkey((0, 0, 0))
+        imgs[1].append(newsur)
         szes.append(Rsize or max(imgs[0][-1].get_size()))
 
 pth = os.path.dirname(__file__) + "/"

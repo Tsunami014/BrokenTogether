@@ -485,7 +485,7 @@
 			"relPath": "generated/out.png",
 			"embedAtlas": null,
 			"pxWid": 256,
-			"pxHei": 384,
+			"pxHei": 448,
 			"tileGridSize": 256,
 			"spacing": 0,
 			"padding": 0,
@@ -603,7 +603,7 @@
 								{ "__identifier": "Ro", "__type": "Float", "__value": 50, "__tile": null, "defUid": 120, "realEditorValues": [] },
 								{ "__identifier": "Ri", "__type": "Float", "__value": 1, "__tile": null, "defUid": 121, "realEditorValues": [] },
 								{ "__identifier": "Size", "__type": "Int", "__value": 256, "__tile": null, "defUid": 122, "realEditorValues": [{ "id": "V_Int", "params": [256] }] },
-								{ "__identifier": "Quality", "__type": "Float", "__value": 1, "__tile": null, "defUid": 143, "realEditorValues": [] }
+								{ "__identifier": "Quality", "__type": "Float", "__value": 2, "__tile": null, "defUid": 143, "realEditorValues": [{ "id": "V_Float", "params": [2] }] }
 							],
 							"__worldX": -160,
 							"__worldY": 0
@@ -832,10 +832,10 @@
 			"identifier": "World_Level_2",
 			"iid": "7de24270-73f0-11ef-bfc6-559c621f3947",
 			"uid": 146,
-			"worldX": -192,
+			"worldX": -96,
 			"worldY": 256,
 			"worldDepth": 0,
-			"pxWid": 192,
+			"pxWid": 96,
 			"pxHei": 96,
 			"__bgColor": "#474B67",
 			"bgColor": null,
@@ -852,7 +852,7 @@
 				{
 					"__identifier": "Settings",
 					"__type": "Entities",
-					"__cWid": 6,
+					"__cWid": 3,
 					"__cHei": 3,
 					"__gridSize": 32,
 					"__opacity": 1,
@@ -887,9 +887,9 @@
 							"px": [0,0],
 							"fieldInstances": [
 								{ "__identifier": "Rotation", "__type": "Float", "__value": 90, "__tile": null, "defUid": 145, "realEditorValues": [{ "id": "V_Float", "params": [90] }] },
-								{ "__identifier": "Size", "__type": "Int", "__value": 256, "__tile": null, "defUid": 148, "realEditorValues": [{ "id": "V_Int", "params": [256] }] }
+								{ "__identifier": "Size", "__type": "Int", "__value": null, "__tile": null, "defUid": 148, "realEditorValues": [null] }
 							],
-							"__worldX": -192,
+							"__worldX": -96,
 							"__worldY": 256
 						}
 					]
@@ -897,7 +897,7 @@
 				{
 					"__identifier": "Tiles",
 					"__type": "Tiles",
-					"__cWid": 6,
+					"__cWid": 3,
 					"__cHei": 3,
 					"__gridSize": 32,
 					"__opacity": 1,
@@ -917,25 +917,19 @@
 					"seed": 7768704,
 					"overrideTilesetUid": null,
 					"gridTiles": [
-						{ "px": [0,32], "src": [0,0], "f": 0, "t": 0, "d": [6], "a": 1 },
-						{ "px": [32,32], "src": [0,0], "f": 0, "t": 0, "d": [7], "a": 1 },
-						{ "px": [64,32], "src": [0,0], "f": 0, "t": 0, "d": [8], "a": 1 },
-						{ "px": [96,32], "src": [0,0], "f": 0, "t": 0, "d": [9], "a": 1 },
-						{ "px": [128,32], "src": [0,0], "f": 0, "t": 0, "d": [10], "a": 1 },
-						{ "px": [160,32], "src": [0,0], "f": 0, "t": 0, "d": [11], "a": 1 },
-						{ "px": [0,64], "src": [0,64], "f": 0, "t": 52, "d": [12], "a": 1 },
-						{ "px": [32,64], "src": [0,64], "f": 0, "t": 52, "d": [13], "a": 1 },
-						{ "px": [64,64], "src": [0,64], "f": 0, "t": 52, "d": [14], "a": 1 },
-						{ "px": [96,64], "src": [0,64], "f": 0, "t": 52, "d": [15], "a": 1 },
-						{ "px": [128,64], "src": [0,64], "f": 0, "t": 52, "d": [16], "a": 1 },
-						{ "px": [160,64], "src": [0,64], "f": 0, "t": 52, "d": [17], "a": 1 }
+						{ "px": [0,32], "src": [0,0], "f": 0, "t": 0, "d": [3], "a": 1 },
+						{ "px": [32,32], "src": [0,0], "f": 0, "t": 0, "d": [4], "a": 1 },
+						{ "px": [64,32], "src": [0,0], "f": 0, "t": 0, "d": [5], "a": 1 },
+						{ "px": [0,64], "src": [0,64], "f": 0, "t": 52, "d": [6], "a": 1 },
+						{ "px": [32,64], "src": [0,64], "f": 0, "t": 52, "d": [7], "a": 1 },
+						{ "px": [64,64], "src": [0,64], "f": 0, "t": 52, "d": [8], "a": 1 }
 					],
 					"entityInstances": []
 				},
 				{
 					"__identifier": "Behind",
 					"__type": "Tiles",
-					"__cWid": 6,
+					"__cWid": 3,
 					"__cHei": 3,
 					"__gridSize": 32,
 					"__opacity": 1,
@@ -992,8 +986,8 @@
 			"worldX": 0,
 			"worldY": 256,
 			"worldDepth": 0,
-			"pxWid": 256,
-			"pxHei": 256,
+			"pxWid": 96,
+			"pxHei": 96,
 			"__bgColor": "#474B67",
 			"bgColor": null,
 			"useAutoIdentifier": true,
@@ -1009,8 +1003,8 @@
 				{
 					"__identifier": "Settings",
 					"__type": "Entities",
-					"__cWid": 8,
-					"__cHei": 8,
+					"__cWid": 3,
+					"__cHei": 3,
 					"__gridSize": 32,
 					"__opacity": 1,
 					"__pxTotalOffsetX": 0,
@@ -1034,8 +1028,8 @@
 				{
 					"__identifier": "Tiles",
 					"__type": "Tiles",
-					"__cWid": 8,
-					"__cHei": 8,
+					"__cWid": 3,
+					"__cHei": 3,
 					"__gridSize": 32,
 					"__opacity": 1,
 					"__pxTotalOffsetX": 0,
@@ -1059,8 +1053,8 @@
 				{
 					"__identifier": "Behind",
 					"__type": "Tiles",
-					"__cWid": 8,
-					"__cHei": 8,
+					"__cWid": 3,
+					"__cHei": 3,
 					"__gridSize": 32,
 					"__opacity": 1,
 					"__pxTotalOffsetX": 0,
@@ -1084,8 +1078,8 @@
 				{
 					"__identifier": "Planets",
 					"__type": "Tiles",
-					"__cWid": 2,
-					"__cHei": 2,
+					"__cWid": 1,
+					"__cHei": 1,
 					"__gridSize": 128,
 					"__opacity": 1,
 					"__pxTotalOffsetX": 0,

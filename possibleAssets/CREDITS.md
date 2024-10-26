@@ -1,0 +1,7 @@
+ - `emotes.png`: from Stardew Valley, ripped by huesteus https://www.spriters-resource.com/pc_computer/stardewvalley/sheet/112786/
+ - `fences.png`: from Stardew Valley, ripped by Woolyam https://www.spriters-resource.com/pc_computer/stardewvalley/sheet/157817/
+ - `fourswordsadventures2d.png`: from The Legend of Zelda: Four Swords Adventures, ripped by CM30 https://www.spriters-resource.com/gamecube/legendofzeldafourswordsadventures/sheet/204573/
+ - `fourswordsOverworld.png`: from The Legend of Zelda: Four Swords Adventures, ripped by Someone https://www.spriters-resource.com/gamecube/legendofzeldafourswordsadventures/sheet/95993/
+ - `items.png`: from Stardew Valley, ripped by Barack Obama, marios1999 https://www.spriters-resource.com/pc_computer/stardewvalley/sheet/197484/
+ - `rain.png`: from Stardew Valley, ripped by Babycake, marios1999 https://www.spriters-resource.com/pc_computer/stardewvalley/sheet/169057/
+ - `yoshijungle.png`: from Super Mario World 2: Yoshi's Island, ripped by Murphmario https://www.spriters-resource.com/snes/yoshiisland/sheet/136575/

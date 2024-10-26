@@ -1,2 +1,4 @@
 .envrc
 *.pyc
+*.xcf
+temp.dat
