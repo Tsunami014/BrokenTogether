@@ -71,5 +71,5 @@ for lvl in range(len(world.ldtk.levels)):
 
 pth = os.path.dirname(__file__) + "/"
 
-wrap.save(imgs[0], pth+"assets/generated/out.png", szes)
-wrap.save(imgs[1], pth+"assets/generated/colls.png", szes)
+wrap.save(imgs[0], pth+"assets/generated/out.png", szes, 256)
+wrap.save(imgs[1], pth+"assets/generated/colls.png", szes, 256)

@@ -35,7 +35,7 @@ debug = DebugCommands(G)
 
 def CollProcessor(e):
     if e.identifier == 'CircleRegion':
-        return collisions.Circle(e.ScaledPos[0], e.ScaledPos[1], e.width/2)
+        return collisions.Circle(e.ScaledPos[0]+e.width/2, e.ScaledPos[1]+e.width/2, e.width/2)
     elif e.identifier == 'RectRegion':
         return collisions.Rect(*e.ScaledPos, e.width, e.height)
 
@@ -55,7 +55,7 @@ class BaseEntity(Ss.BaseEntity):
                 closest = cpoints[0][0]
                 ydiff, xdiff = thisObj.y-closest[1], thisObj.x-closest[0]
                 angle = collisions.direction(closest, thisObj)
-                tan = cpoints[0][1].tangent(closest, [xdiff, ydiff])
+                tan = cpoints[0][1].tangent(closest, [-xdiff, -ydiff])
                 gravity = collisions.pointOnUnitCircle(angle, -0.2)
             else:
                 gravity = [0, 0]
@@ -141,6 +141,9 @@ class MainGameScene(Ss.BaseScene):
             return self.sur
         self.showingColls = debug.showingColls
         self.sur = self.Game.world.get_pygame(self.lvl)
+        for e in self.Game.world.get_level(self.lvl).entities:
+            if e.layerId.startswith('Entities'):
+                self.sur.blit(e.get_tile(), e.ScaledPos)
         if self.showingColls:
             colls = self.collider()
             for col, li in (((255, 10, 50), colls), ((10, 50, 255), self.Game.currentLvL.GetEntitiesByLayer('GravityFields', CollProcessor))):
