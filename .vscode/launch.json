@@ -13,6 +13,16 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Wrap worlds",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/wrap.py",
+            "cwd": "${workspaceFolder}/assets",
+            "args": ["run_sync"],
+            "justMyCode": false,
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Python Current File",
             "type": "debugpy",
             "request": "launch",
