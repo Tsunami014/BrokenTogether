@@ -7,7 +7,6 @@ import pygame
 
 G = Game()
 G.load_map("./assets/main.ldtk")
-G.UILayer.add('Toasts')
 
 class DebugCommands:
     def __init__(self, Game):
@@ -21,15 +20,15 @@ class DebugCommands:
     
     def toggleColls(self):
         self.showingColls = not self.showingColls
-        G.G['Toasts'].append(Toast(G.G, ('Showing' if self.showingColls else 'Not showing') + ' collisions'))
+        G.UILayer.append(Toast(G, ('Showing' if self.showingColls else 'Not showing') + ' collisions'))
     
     def toggleIgnore(self):
         self.colliding = not self.colliding
-        G.G['Toasts'].append(Toast(G.G, ('Applying' if self.colliding else 'Ignoring') + ' collisions'))
+        G.UILayer.append(Toast(G, ('Applying' if self.colliding else 'Ignoring') + ' collisions'))
     
     def toggleGlobal(self):
         self.globalMove = not self.globalMove
-        G.G['Toasts'].append(Toast(G.G, 'Moving '+('globally' if self.globalMove else 'planet-based')))
+        G.UILayer.append(Toast(G, 'Moving '+('globally' if self.globalMove else 'planet-based')))
 
 debug = DebugCommands(G)
 
@@ -56,7 +55,7 @@ class BaseEntity(Ss.BaseEntity):
                 ydiff, xdiff = thisObj.y-closest[1], thisObj.x-closest[0]
                 angle = collisions.direction(closest, thisObj)
                 tan = cpoints[0][1].tangent(closest, [-xdiff, -ydiff])
-                gravity = collisions.pointOnUnitCircle(angle, -0.2)
+                gravity = collisions.pointOnCircle(angle, -0.2)
             else:
                 gravity = [0, 0]
                 tan = 0
@@ -163,4 +162,4 @@ class MainGameScene(Ss.BaseScene):
 
 G.load_scene()
 
-G.play(debug=True)
+G.debug()
