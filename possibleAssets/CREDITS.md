@@ -5,3 +5,4 @@
  - `items.png`: from Stardew Valley, ripped by Barack Obama, marios1999 https://www.spriters-resource.com/pc_computer/stardewvalley/sheet/197484/
  - `rain.png`: from Stardew Valley, ripped by Babycake, marios1999 https://www.spriters-resource.com/pc_computer/stardewvalley/sheet/169057/
  - `yoshijungle.png`: from Super Mario World 2: Yoshi's Island, ripped by Murphmario https://www.spriters-resource.com/snes/yoshiisland/sheet/136575/
+ - `outdoors.png`: from Stardew Valley, ripped by marios1999, Mr Mad Mothy https://www.spriters-resource.com/pc_computer/stardewvalley/sheet/88632/

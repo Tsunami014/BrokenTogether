@@ -33,9 +33,17 @@
     - Secret Course Theme #1 - m477zorz
     - Bowser's trap/castle remix: ParagonX9
     - Made in Flash Professional 8 by Runouw
+    - Special thanks to Nintendo (and with small mentions to HAL Lab, Sora Ltd, SEGA, and Namco), without them, this Fan-Game would not be possible.
 
- - Grass Path: https://drawatree.itch.io/grass-path (modified)
+ - Grass & Path: from Stardew Valley, ripped by marios1999 & Mr Mad Mothy (modified slightly and formatted)
  - Grass 2.5D Tileset: https://edusilvart.itch.io/grass-tileset (modified)
  - `icons.png`: https://zeromatrix.itch.io/rpgiab-icons
 
-All modifications by me
+ - Coding by Tsunami014
+ - Game engine by Tsunami014
+    - Made in Python with Pygame <3
+ - Level design by Tsunami014
+ - Level editor; LDtk (==TODO:== LDtk credits)
+
+All modifications, formatting etc. unless specified, by me
+
