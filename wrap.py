@@ -38,14 +38,13 @@ class Chooser(Screen):
         self['Main'].append(btn)
         rainbow = GO.CRAINBOW()
         for lvl in range(len(world.ldtk.levels)):
-            for e in world.ldtk.levels[lvl].entities:
+            lvlObj = world.ldtk.levels[lvl]
+            for e in lvlObj.entities:
                 if e.identifier == 'WrapSettings':
-                    for i in e.fieldInstances:
-                        if i['__identifier'] == 'name':
-                            btn = GUI.Button(self, GO.PCCENTER, next(rainbow), (i['__value'] or 'Unnamed'))
-                            self.opts.append(lvl)
-                            btn.lvl = lvl
-                            self['Main'].append(btn)
+                    btn = GUI.Button(self, GO.PCCENTER, next(rainbow), (lvlObj.identifier))
+                    self.opts.append(lvl)
+                    btn.lvl = lvl
+                    self['Main'].append(btn)
     
     def _ElementClick(self, obj):
         self.chosen = obj
@@ -73,11 +72,10 @@ def run(slf):
         Bottom = -0.5
         Limit = True
 
-        name = None
-
         wraping = False
         segs = []
-        for e in world.ldtk.levels[lvl].entities:
+        lvlObj = world.ldtk.levels[lvl]
+        for e in lvlObj.entities:
             if e.identifier == 'WrapSettings':
                 wraping = True
                 for i in e.fieldInstances:
@@ -87,13 +85,11 @@ def run(slf):
                         Bottom = i['__value']
                     elif i['__identifier'] == 'limit':
                         Limit = i['__value']
-                    elif i['__identifier'] == 'name':
-                        name = i['__value']
             elif e.identifier == 'Segment':
                 segs.append(wrap.Segment(e.ScaledPos[0], e.fieldInstances[0]['__value']['cx']*e.gridSze+e.layerOffset[0]))
         if wraping:
             doneLvls += 1
-            yield 'Wrapping...', {'formatter': lambda *args: DEFAULT_FORMAT_FUNC(args[0]+f' for level {name} ({doneLvls}/{len(levels)})', *args[1:])}
+            yield 'Wrapping...', {'formatter': lambda *args: DEFAULT_FORMAT_FUNC(args[0]+f' for level {lvlObj.identifier} ({doneLvls}/{len(levels)})', *args[1:])}
             i1, i2 = yield from wrap.wrapLevel(world, lvl, Top, Bottom, Limit, 0, segs, [255, 255, 255, 10], True)
             imgs[0].append(i1)
             imgs[1].append(i2)
@@ -106,7 +102,9 @@ def run(slf):
         wrap.save(imgs[0], pth+"generated/out.png", 256, blanks)
         wrap.save(imgs[1], pth+"generated/colls.png", 256, blanks)
         wrap.saveData(imgs[0], pth+"generated/dat.txt", [
-            i['__value'] for lvl in range(len(world.ldtk.levels)) for e in world.ldtk.levels[lvl].entities for i in e.fieldInstances if e.identifier == 'WrapSettings' and i['__identifier'] == 'name'
+            world.ldtk.levels[lvl].identifier for lvl in range(len(world.ldtk.levels)) if any(
+                e.identifier == 'WrapSettings' for e in world.ldtk.levels[lvl].entities
+            )
         ], 256, blanks)
     else:
         name = chosen.get()
