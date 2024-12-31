@@ -6,7 +6,7 @@ from BlazeSudio.utils import approximate_polygon
 import pygame
 
 G = Game()
-G.load_map("./assets/main.ldtk")
+G.load_map("./assets/levels/level1/main.ldtk")
 
 class DebugCommands:
     def __init__(self, Game):
