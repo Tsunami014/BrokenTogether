@@ -3139,7 +3139,7 @@
 			"enumTags": [],
 			"customData": [],
 			"savedSelections": [],
-			"cachedPixelData": { "opaqueTiles": "000000000000000", "averageColors": "2bcb5dca0fff5ccaddd91baa0eee28a80fff67a72aa900001aba0bbb0000" }
+			"cachedPixelData": { "opaqueTiles": "000000000000000", "averageColors": "2bcb5dca0fff5ccaddd91baa0eee28a80fff67a72aa900001aca0bbb0000" }
 		},
 		{
 			"__cWid": 20,
@@ -3445,35 +3445,35 @@
 						},
 						{
 							"__identifier": "CircleRegion",
-							"__grid": [138,88],
+							"__grid": [142,91],
 							"__pivot": [0.5,0.5],
 							"__tags": ["region"],
 							"__tile": null,
 							"__smartColor": "#D77643",
 							"iid": "4c451b20-c210-11ef-9d1d-4df3901c245c",
-							"width": 104,
-							"height": 104,
+							"width": 168,
+							"height": 168,
 							"defUid": 5,
-							"px": [1108,708],
+							"px": [1140,732],
 							"fieldInstances": [],
-							"__worldX": 1108,
-							"__worldY": 708
+							"__worldX": 1140,
+							"__worldY": 732
 						},
 						{
 							"__identifier": "RectRegion",
-							"__grid": [127,87],
+							"__grid": [127,90],
 							"__pivot": [0,0],
 							"__tags": ["region"],
 							"__tile": null,
 							"__smartColor": "#BE4A2F",
 							"iid": "719d8010-c210-11ef-9d1d-e1d4c119d59e",
-							"width": 40,
-							"height": 16,
+							"width": 56,
+							"height": 32,
 							"defUid": 4,
-							"px": [1016,696],
+							"px": [1016,720],
 							"fieldInstances": [],
 							"__worldX": 1016,
-							"__worldY": 696
+							"__worldY": 720
 						}
 					]
 				},
@@ -4606,7 +4606,7 @@
 						},
 						{
 							"__identifier": "Segment",
-							"__grid": [18,3],
+							"__grid": [21,3],
 							"__pivot": [0,0],
 							"__tags": ["PlanetMaking"],
 							"__tile": { "tilesetUid": 98, "x": 336, "y": 32, "w": 16, "h": 16 },
@@ -4615,12 +4615,12 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 103,
-							"px": [288,48],
-							"fieldInstances": [{ "__identifier": "ToPoint", "__type": "Point", "__value": { "cx": 21, "cy": 3 }, "__tile": null, "defUid": 105, "realEditorValues": [{
+							"px": [336,48],
+							"fieldInstances": [{ "__identifier": "ToPoint", "__type": "Point", "__value": { "cx": 25, "cy": 3 }, "__tile": null, "defUid": 105, "realEditorValues": [{
 								"id": "V_String",
-								"params": ["21,3"]
+								"params": ["25,3"]
 							}] }],
-							"__worldX": 1344,
+							"__worldX": 1392,
 							"__worldY": -208
 						},
 						{
