@@ -24,6 +24,8 @@ if '/brokenTogether' not in os.getcwd():
 
 os.chdir(os.getcwd()[:os.getcwd().index('/brokenTogether')+15])
 
+from loadWorld import collisionFunc  # noqa: E402
+
 imgs = [[], []]
 class Chooser(Screen):
     def __init__(self):
@@ -62,7 +64,7 @@ if chosen.lvl is None:
 else:
     levels = [chosen.lvl]
 
-@Progressbar(3)
+@Progressbar(100)
 def run(slf):
     yield 'Starting'
 
@@ -89,8 +91,8 @@ def run(slf):
                 segs.append(wrap.Segment(e.ScaledPos[0], e.fieldInstances[0]['__value']['cx']*e.gridSze+e.layerOffset[0]))
         if wraping:
             doneLvls += 1
-            yield 'Wrapping...', {'formatter': lambda *args: DEFAULT_FORMAT_FUNC(args[0]+f' for level {lvlObj.identifier} ({doneLvls}/{len(levels)})', *args[1:])}
-            i1, i2 = yield from wrap.wrapLevel(world, lvl, Top, Bottom, Limit, 0, segs, [255, 255, 255, 10], True)
+            yield 'Wrapping', {'formatter': lambda *args: DEFAULT_FORMAT_FUNC(args[0]+f' for level {lvlObj.identifier} ({doneLvls}/{len(levels)})', *args[1:])}
+            i1, i2 = yield from wrap.wrapLevel(world, lvl, collisionFunc, Top, Bottom, Limit, 0, segs, [255, 255, 255, 10], True)
             imgs[0].append(i1)
             imgs[1].append(i2)
 
