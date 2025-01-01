@@ -98,6 +98,8 @@ class MainGameScene(Ss.BaseScene):
         self.showingColls = True
         self._collider = None
         self.off = [0, 0]
+        self.lastGrav = None
+        self.gravChangeSpeed = 5
         self.CamDist = 4
         self.CamBounds = [None, None, None, None]
         es = self.currentLvl.GetEntitiesByUID(6) # The Player
@@ -149,7 +151,24 @@ class MainGameScene(Ss.BaseScene):
         return self._Rotate(sur)
 
     def _Rotate(self, sur):
-        ang = math.degrees(collisions.direction((0, 0), self.entities[0].gravity))-90
+        gravang = (math.degrees(collisions.direction((0, 0), self.entities[0].gravity))-90) % 360
+        if self.lastGrav is None:
+            self.lastGrav = gravang
+        else:
+            angOpts = [gravang, gravang-360, gravang+360]
+            gravang = min(angOpts, key=lambda x: abs(x-self.lastGrav))
+            if self.lastGrav > gravang:
+                self.lastGrav -= self.gravChangeSpeed
+                if self.lastGrav < gravang:
+                    self.lastGrav = gravang
+            elif self.lastGrav < gravang:
+                self.lastGrav += self.gravChangeSpeed
+                if self.lastGrav > gravang:
+                    self.lastGrav = gravang
+            
+            self.lastGrav = self.lastGrav % 360
+        
+        ang = self.lastGrav
         rotated_sur = pygame.transform.rotate(sur, ang)
         old_center = sur.get_rect().center
         rotated_rect = rotated_sur.get_rect()
