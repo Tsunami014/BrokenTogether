@@ -97,6 +97,7 @@ class MainGameScene(Ss.BaseScene):
         self.sur = None
         self.showingColls = True
         self._collider = None
+        self.off = [0, 0]
         self.CamDist = 4
         self.CamBounds = [None, None, None, None]
         es = self.currentLvl.GetEntitiesByUID(6) # The Player
@@ -111,7 +112,11 @@ class MainGameScene(Ss.BaseScene):
     
     @property
     def CamPos(self):
-        return self.entities[0].scaled_pos
+        playerPos = self.entities[0].scaled_pos
+        return (
+            playerPos[0]-self.off[0],
+            playerPos[1]-self.off[1]
+        )
     
     def collider(self):
         if self._collider is not None:
@@ -137,9 +142,16 @@ class MainGameScene(Ss.BaseScene):
         return self._collider
 
     def _postProcess(self):
+        pos = self.entities[0].scaled_pos
+        sur = self.sur.copy()
+        pygame.draw.circle(sur, (0, 0, 0), pos, 7)
+        pygame.draw.circle(sur, (255, 255, 255), pos, 7, 2)
+        return self._Rotate(sur)
+
+    def _Rotate(self, sur):
         ang = math.degrees(collisions.direction((0, 0), self.entities[0].gravity))-90
-        rotated_sur = pygame.transform.rotate(self.sur, ang)
-        old_center = self.sur.get_rect().center
+        rotated_sur = pygame.transform.rotate(sur, ang)
+        old_center = sur.get_rect().center
         rotated_rect = rotated_sur.get_rect()
         playerPos = self.entities[0].scaled_pos
         newPos = collisions.rotate(old_center, playerPos, -ang)
@@ -148,9 +160,8 @@ class MainGameScene(Ss.BaseScene):
             old_center[0] - diff[0],
             old_center[1] - diff[1]
         )
-        new_sur = pygame.Surface(self.sur.get_size(), pygame.SRCALPHA)
-        new_sur.blit(rotated_sur, rotated_rect)
-        return new_sur
+        self.off = rotated_rect.topleft
+        return rotated_sur
 
     def render(self):
         if self.sur is not None and debug.showingColls == self.showingColls:
@@ -171,11 +182,6 @@ class MainGameScene(Ss.BaseScene):
                     elif isinstance(s, collisions.Circle):
                         pygame.draw.circle(self.sur, col, (s.x, s.y), s.r, 1)
         return self._postProcess()
-    
-    def renderUI(self, win, scaleF):
-        pos = scaleF(self.entities[0].scaled_pos)
-        pygame.draw.circle(win, (0, 0, 0), pos, 10)
-        pygame.draw.circle(win, (255, 255, 255), pos, 10, 2)
 
 G.load_scene()
 
