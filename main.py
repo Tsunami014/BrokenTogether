@@ -6,6 +6,8 @@ import BlazeSudio.Game.statics as Ss
 from BlazeSudio.utils import approximate_polygon
 import pygame
 
+# TODO: Each level inside a level file is all in the one scene, but they are just not loaded if they are not visible
+
 G = Game()
 G.load_map("./assets/levels/level1/main.ldtk")
 
@@ -99,7 +101,7 @@ class MainGameScene(Ss.BaseScene):
         self._collider = None
         self.off = [0, 0]
         self.lastGrav = None
-        self.gravChangeSpeed = 5
+        self.gravChangeSpeed = 4 # TODO: When we have a player sprite, make the camera go slower than the player's spin animation
         self.CamDist = 4
         self.CamBounds = [None, None, None, None]
         es = self.currentLvl.GetEntitiesByUID(6) # The Player
@@ -116,8 +118,8 @@ class MainGameScene(Ss.BaseScene):
     def CamPos(self):
         playerPos = self.entities[0].scaled_pos
         return (
-            playerPos[0]-self.off[0],
-            playerPos[1]-self.off[1]
+            round(playerPos[0]-self.off[0]),
+            round(playerPos[1]-self.off[1])
         )
     
     def collider(self):
@@ -169,7 +171,8 @@ class MainGameScene(Ss.BaseScene):
             self.lastGrav = self.lastGrav % 360
         
         ang = self.lastGrav
-        rotated_sur = pygame.transform.rotate(sur, ang)
+        rotated_sur = pygame.transform.rotozoom(sur, ang, 1) # Smooth
+        # rotated_sur = pygame.transform.rotate(sur, ang) # Pixelated
         old_center = sur.get_rect().center
         rotated_rect = rotated_sur.get_rect()
         playerPos = self.entities[0].scaled_pos
