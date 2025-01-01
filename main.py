@@ -1,3 +1,4 @@
+import math
 from BlazeSudio import ldtk, collisions
 from BlazeSudio.Game import Game
 from BlazeSudio.graphics.GUI import Toast
@@ -135,9 +136,25 @@ class MainGameScene(Ss.BaseScene):
         self._collider = collisions.Shapes(*colls, *self.Game.currentLvL.GetAllEntities(CollProcessor))
         return self._collider
 
+    def _postProcess(self):
+        ang = math.degrees(collisions.direction((0, 0), self.entities[0].gravity))-90
+        rotated_sur = pygame.transform.rotate(self.sur, ang)
+        old_center = self.sur.get_rect().center
+        rotated_rect = rotated_sur.get_rect()
+        playerPos = self.entities[0].scaled_pos
+        newPos = collisions.rotate(old_center, playerPos, -ang)
+        diff = (newPos[0]-playerPos[0], newPos[1]-playerPos[1])
+        rotated_rect.center = (
+            old_center[0] - diff[0],
+            old_center[1] - diff[1]
+        )
+        new_sur = pygame.Surface(self.sur.get_size(), pygame.SRCALPHA)
+        new_sur.blit(rotated_sur, rotated_rect)
+        return new_sur
+
     def render(self):
         if self.sur is not None and debug.showingColls == self.showingColls:
-            return self.sur
+            return self._postProcess()
         self.showingColls = debug.showingColls
         self.sur = self.Game.world.get_pygame(self.lvl)
         for e in self.Game.world.get_level(self.lvl).entities:
@@ -153,7 +170,7 @@ class MainGameScene(Ss.BaseScene):
                         pygame.draw.rect(self.sur, col, (s.x, s.y, s.w, s.h), 1)
                     elif isinstance(s, collisions.Circle):
                         pygame.draw.circle(self.sur, col, (s.x, s.y), s.r, 1)
-        return self.sur
+        return self._postProcess()
     
     def renderUI(self, win, scaleF):
         pos = scaleF(self.entities[0].scaled_pos)
