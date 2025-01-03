@@ -3,7 +3,7 @@ from BlazeSudio.ldtk import Tileset
 import BlazeSudio.utils.genCollisions as gen
 import pygame
 
-MAINWORLD = world.World('./assets/all/main.ldtk')
+MAINWORLD = world.World('./assets/main.ldtk')
 TILESETS = list(MAINWORLD.ldtk.tilesets.values())
 
 def collisionFunc(tset: Tileset, x, y):
