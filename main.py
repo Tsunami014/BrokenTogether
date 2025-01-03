@@ -9,6 +9,7 @@ import pygame
 # TODO: Each level inside a level file is all in the one scene, but they are just not loaded if they are not visible
 
 G = Game()
+G.set_caption('Broken Together')
 G.load_map("./assets/levels/level1/main.ldtk")
 
 class DebugCommands:
@@ -36,43 +37,103 @@ class DebugCommands:
 debug = DebugCommands(G)
 
 def CollProcessor(e):
-    if e.identifier == 'CircleRegion':
+    if e.defData['renderMode'] == 'Ellipse':
         return collisions.Circle(e.ScaledPos[0]+e.width/2, e.ScaledPos[1]+e.width/2, e.width/2)
-    elif e.identifier == 'RectRegion':
+    elif e.defData['renderMode'] == 'Rectangle':
         return collisions.Rect(*e.ScaledPos, e.width, e.height)
 
 class BaseEntity(Ss.BaseEntity):
     def __init__(self, Game, entity):
         super().__init__(Game, entity)
         self.max_speed = 15
+        self.gravType = None
+        self.gravDir = None
+        self.camType = None
+        self.camDir = None
     
     def __call__(self, evs):
-        objs = collisions.Shapes(*self.Game.currentLvL.GetEntitiesByLayer('GravityFields', CollProcessor))
+        es = self.Game.currentLvL.GetEntitiesByLayer('GravityFields')
         oldPos = self.scaled_pos
         thisObj = collisions.Point(*oldPos)
         if not debug.globalMove:
-            cpoints = [(i.closestPointTo(thisObj), i) for i in objs]
-            if cpoints:
+            objs = [CollProcessor(i) for i in es]
+            gravs = [i for idx, i in enumerate(es) if objs[idx].collides(thisObj)]
+            def findFieldInstance(e, name):
+                return [i['__value'] for i in e.fieldInstances if i['__identifier'] == name][0]
+            gravs.sort(key=lambda x: -findFieldInstance(x, 'Layer'))
+
+            self.gravType = None
+            self.gravDir = None
+            self.camType = None
+            self.camDir = None
+            invert = None
+
+            for g in gravs:
+                if self.gravType is None:
+                    self.gravType = findFieldInstance(g, 'GravityType')
+                    self.gravDir = findFieldInstance(g, 'GravityDir')
+                if self.camType is None:
+                    camTyp = findFieldInstance(g, 'Camera')
+                    if camTyp == 'Parent':
+                        continue
+                    self.camType = camTyp
+                    self.camDir = findFieldInstance(g, 'CameraDir')
+                if invert is None:
+                    invert = findFieldInstance(g, 'InvertControls')
+            
+            if self.gravType is None:
+                self.gravType = findFieldInstance(self.entity, 'DefGravityType')
+                self.gravDir = findFieldInstance(self.entity, 'GravityDir')
+            if self.camType is None:
+                self.camType = findFieldInstance(self.entity, 'DefCamera')
+                self.camDir = findFieldInstance(self.entity, 'CameraDir')
+            if invert is None:
+                invert = findFieldInstance(self.entity, 'DefInvertControls')
+
+            cpoints = None
+            match self.gravType:
+                case 'Global':
+                    self.gravity = collisions.pointOnCircle(self.gravDir-90, 0.2)
+                    norm = self.gravDir
+                case 'Nearest':
+                    cpoints = [(i.closestPointTo(thisObj), i) for i in objs]
+                case 'NoGrav':
+                    self.gravity = [0, 0]
+                    norm = math.degrees(collisions.direction((0, 0), self.velocity))-90
+                case 'Inwards':
+                    collObj = CollProcessor(gravs[0])
+                    r = collObj.rect()
+                    midp = ((r[2]-r[0])/2+r[0], (r[3]-r[1])/2+r[1])
+                    cpoints = [(midp, collisions.Point(*midp))]
+                case 'Outwards':
+                    collObj = CollProcessor(gravs[0])
+                    cpoints = [(collObj.closestPointTo(thisObj), collObj)]
+            
+            if cpoints is not None:
                 cpoints.sort(key=lambda x: (thisObj.x-x[0][0])**2+(thisObj.y-x[0][1])**2)
                 closest = cpoints[0][0]
                 ydiff, xdiff = thisObj.y-closest[1], thisObj.x-closest[0]
                 angle = collisions.direction(closest, thisObj)
                 tan = cpoints[0][1].tangent(closest, [-xdiff, -ydiff])
-                gravity = collisions.pointOnCircle(angle, -0.2)
-            else:
-                gravity = [0, 0]
-                tan = 0
-            self.gravity = gravity
+                norm = tan-90
+                self.gravity = collisions.pointOnCircle(angle, -0.2)
+            
+            if self.gravType == 'Outwards':
+                norm += 180
+            
+            if invert:
+                norm += 180
+
             keys = pygame.key.get_pressed()
             jmp = any(e.type == pygame.KEYDOWN and e.key == pygame.K_UP for e in evs)
             if keys[pygame.K_LEFT] ^ keys[pygame.K_RIGHT] or jmp:
                 offs = [(0, 0)]
                 if jmp:
-                    offs.append(collisions.rotateBy0((0, -15), tan-90))
+                    offs.append(collisions.rotateBy0((0, -15), norm + (180 if invert else 0)))
                 if keys[pygame.K_LEFT]:
-                    offs.append(collisions.rotateBy0((-self.acceleration, 0), tan-90))
+                    offs.append(collisions.rotateBy0((-self.acceleration, 0), norm))
                 elif keys[pygame.K_RIGHT]:
-                    offs.append(collisions.rotateBy0((self.acceleration, 0), tan-90))
+                    offs.append(collisions.rotateBy0((self.acceleration, 0), norm))
                 off = (sum(i[0] for i in offs), sum(i[1] for i in offs))
                 self.target_velocity = [self.target_velocity[0] + off[0],
                                         self.target_velocity[1] + off[1]]
@@ -142,7 +203,7 @@ class MainGameScene(Ss.BaseScene):
                     colls.append(collisions.ShapeCombiner.pointsToShape(*[(i[0]+t.pos[0], i[1]+t.pos[1]) for i in poly.toPoints()]))
             elif lay.type == 'IntGrid':
                 colls.extend(collisions.ShapeCombiner.combineRects(*lay.intgrid.getRects(lay.intgrid.allValues[1:])))
-        self._collider = collisions.Shapes(*colls, *self.Game.currentLvL.GetAllEntities(CollProcessor))
+        self._collider = collisions.Shapes(*colls)#, *self.Game.currentLvL.GetAllEntities(CollProcessor))
         return self._collider
 
     def _postProcess(self):
@@ -150,10 +211,20 @@ class MainGameScene(Ss.BaseScene):
         sur = self.sur.copy()
         pygame.draw.circle(sur, (0, 0, 0), pos, 7)
         pygame.draw.circle(sur, (255, 255, 255), pos, 7, 2)
+        # pygame.draw.line(sur, (125, 125, 125), pos, (pos[0]+self.entities[0].gravity[0]*100, pos[1]+self.entities[0].gravity[1]*100), 2)
         return self._Rotate(sur)
 
     def _Rotate(self, sur):
-        gravang = (math.degrees(collisions.direction((0, 0), self.entities[0].gravity))-90) % 360
+        match self.entities[0].camType:
+            case 'AroundPlayer':
+                gravang = math.degrees(collisions.direction((0, 0), self.entities[0].gravity))-90
+                gravang = (gravang + self.entities[0].camDir) % 360
+            case 'Global':
+                gravang = (self.entities[0].camDir) % 360
+            case 'AsIs':
+                if self.lastGrav is None:
+                    self.lastGrav = 0
+                gravang = self.lastGrav
         if self.lastGrav is None:
             self.lastGrav = gravang
         else:
@@ -189,7 +260,7 @@ class MainGameScene(Ss.BaseScene):
         if self.sur is not None and debug.showingColls == self.showingColls:
             return self._postProcess()
         self.showingColls = debug.showingColls
-        self.sur = self.Game.world.get_pygame(self.lvl)
+        self.sur = self.Game.world.get_pygame(self.lvl, True)
         for e in self.Game.world.get_level(self.lvl).entities:
             if e.layerId.startswith('Entities'):
                 self.sur.blit(e.get_tile(), e.ScaledPos)

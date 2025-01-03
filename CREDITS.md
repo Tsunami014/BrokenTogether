@@ -1,3 +1,4 @@
+## Super Mario 63
  - Super Mario 63 tiles and decor borrowed directly from the game's source and <u>**heavily**</u> modified (took me **hours**). Super mario 63 credits:
     - Developer - Runouw
     - Rips from Super Mario World 2: Yoshi's Island:
@@ -36,14 +37,24 @@
     - Special thanks to Nintendo (and with small mentions to HAL Lab, Sora Ltd, SEGA, and Namco), without them, this Fan-Game would not be possible.
 
  - Grass & Path: from Stardew Valley, ripped by marios1999 & Mr Mad Mothy (modified slightly and formatted)
- - Grass 2.5D Tileset: https://edusilvart.itch.io/grass-tileset (modified)
  - `icons.png`: https://zeromatrix.itch.io/rpgiab-icons
 
+## Backgrounds
+ - Some backgrounds from `@aquatic_ambi`: https://t.co/PSU1ixf2gO
+    - `Galaxy1.jpg`
+ - Some screenshotted from https://noclip.website/
+    - `GustyGarden.png`
+    - `Observatory.png`
+
+## Coding
  - Coding by Tsunami014
  - Game engine by Tsunami014
     - Made in Python with Pygame <3
+
+## Level Design
  - Level design by Tsunami014
  - Level editor; LDtk (==TODO:== LDtk credits)
 
+## 
 All modifications, formatting etc. unless specified, by me
 
