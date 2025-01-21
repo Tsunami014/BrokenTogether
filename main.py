@@ -45,22 +45,32 @@ def CollProcessor(e):
 class BaseEntity(Ss.BaseEntity):
     def __init__(self, Game, entity):
         super().__init__(Game, entity)
-        self.max_speed = 15
+        # Each value is in units per frame unless specified
+        self.max_speed = 200  # Max speed
+        self.friction = 0.03  # Friction (applied each frame) (in percent of current speed)
+        self.not_hold_fric = 0.1 # ADDED friction to apply when not holding ANY KEY (you can modify this to be only left-right or whatever) (in percent of current speed)
+        self.not_hold_grav = [0.5, 0.5] # Decrease in gravity to apply when not holding THE UP KEY (in percent of current gravity strength)
+
+        self.movement = 0.5 # How much you move left/right each frame
+        self.jump = 150 # Change in velocity when jumping
+        self.grav_amount = 0.6 # Gravity strength
+
         self.gravType = None
         self.gravDir = None
         self.camType = None
         self.camDir = None
-    
+
     def __call__(self, evs):
         es = self.Game.currentLvL.GetEntitiesByLayer('GravityFields')
         oldPos = self.scaled_pos
-        thisObj = collisions.Point(*oldPos)
+        thisObj = collisions.Circle(*oldPos, 2)
         if not debug.globalMove:
-            objs = [CollProcessor(i) for i in es]
-            gravs = [i for idx, i in enumerate(es) if objs[idx].collides(thisObj)]
+            transform = {i: CollProcessor(i) for i in es}
+            objs = list(transform.values())
+            gravs = [i for i in es if transform[i].collides(thisObj)]
             def findFieldInstance(e, name):
                 return [i['__value'] for i in e.fieldInstances if i['__identifier'] == name][0]
-            gravs.sort(key=lambda x: -findFieldInstance(x, 'Layer'))
+            gravs.sort(key=lambda x: (-findFieldInstance(x, 'Layer')))
 
             self.gravType = None
             self.gravDir = None
@@ -93,7 +103,7 @@ class BaseEntity(Ss.BaseEntity):
             cpoints = None
             match self.gravType:
                 case 'Global':
-                    self.gravity = collisions.pointOnCircle(self.gravDir-90, 0.2)
+                    self.gravity = collisions.pointOnCircle(self.gravDir-90, self.grav_amount)
                     norm = self.gravDir
                 case 'Nearest':
                     cpoints = [(i.closestPointTo(thisObj), i) for i in objs]
@@ -101,12 +111,12 @@ class BaseEntity(Ss.BaseEntity):
                     self.gravity = [0, 0]
                     norm = math.degrees(collisions.direction((0, 0), self.velocity))-90
                 case 'Inwards':
-                    collObj = CollProcessor(gravs[0])
+                    collObj = transform[gravs[0]]
                     r = collObj.rect()
                     midp = ((r[2]-r[0])/2+r[0], (r[3]-r[1])/2+r[1])
                     cpoints = [(midp, collisions.Point(*midp))]
                 case 'Outwards':
-                    collObj = CollProcessor(gravs[0])
+                    collObj = transform[gravs[0]]
                     cpoints = [(collObj.closestPointTo(thisObj), collObj)]
             
             if cpoints is not None:
@@ -116,7 +126,7 @@ class BaseEntity(Ss.BaseEntity):
                 angle = collisions.direction(closest, thisObj)
                 tan = cpoints[0][1].tangent(closest, [-xdiff, -ydiff])
                 norm = tan-90
-                self.gravity = collisions.pointOnCircle(angle, -0.2)
+                self.gravity = collisions.pointOnCircle(angle, -self.grav_amount)
             
             if self.gravType == 'Outwards':
                 norm += 180
@@ -125,18 +135,20 @@ class BaseEntity(Ss.BaseEntity):
                 norm += 180
 
             keys = pygame.key.get_pressed()
+            self.holding_jmp = keys[pygame.K_UP]
+            self.holding_any = keys[pygame.K_LEFT] or keys[pygame.K_RIGHT] or self.holding_jmp
             jmp = any(e.type == pygame.KEYDOWN and e.key == pygame.K_UP for e in evs)
             if keys[pygame.K_LEFT] ^ keys[pygame.K_RIGHT] or jmp:
                 offs = [(0, 0)]
                 if jmp:
                     offs.append(collisions.rotateBy0((0, -15), norm + (180 if invert else 0)))
                 if keys[pygame.K_LEFT]:
-                    offs.append(collisions.rotateBy0((-self.acceleration, 0), norm))
+                    offs.append(collisions.rotateBy0((-self.movement, 0), norm))
                 elif keys[pygame.K_RIGHT]:
-                    offs.append(collisions.rotateBy0((self.acceleration, 0), norm))
+                    offs.append(collisions.rotateBy0((self.movement, 0), norm))
                 off = (sum(i[0] for i in offs), sum(i[1] for i in offs))
-                self.target_velocity = [self.target_velocity[0] + off[0],
-                                        self.target_velocity[1] + off[1]]
+                self._velocity = [self._velocity[0] + off[0],
+                                  self._velocity[1] + off[1]]
         else:
             self.gravity = [0, 0]
             self.handle_keys()
@@ -145,7 +157,7 @@ class BaseEntity(Ss.BaseEntity):
             colls = self.Game.currentScene.collider()
         else:
             colls = collisions.Shapes()
-        outRect, self.velocity = thisObj.handleCollisionsVel(self.velocity, colls, False)
+        outRect, self._velocity = thisObj.handleCollisionsVel(self._velocity, colls, False)
         self.pos = self.entity.unscale_pos(outRect)
     
     @property
@@ -207,11 +219,13 @@ class MainGameScene(Ss.BaseScene):
         return self._collider
 
     def _postProcess(self):
-        pos = self.entities[0].scaled_pos
+        player = self.entities[0]
+        pos = player.scaled_pos
         sur = self.sur.copy()
         pygame.draw.circle(sur, (0, 0, 0), pos, 7)
         pygame.draw.circle(sur, (255, 255, 255), pos, 7, 2)
-        # pygame.draw.line(sur, (125, 125, 125), pos, (pos[0]+self.entities[0].gravity[0]*100, pos[1]+self.entities[0].gravity[1]*100), 2)
+        # pygame.draw.line(sur, (125, 125, 125), pos, (pos[0]+player._velocity[0]*10, pos[1]+player._velocity[1]*10), 2)
+        # pygame.draw.line(sur, (255, 50, 50), pos, (pos[0]+player._velocity[0]*10, pos[1]+player._velocity[1]*10), 2)
         return self._Rotate(sur)
 
     def _Rotate(self, sur):
