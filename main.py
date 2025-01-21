@@ -147,8 +147,8 @@ class BaseEntity(Ss.BaseEntity):
                 elif keys[pygame.K_RIGHT]:
                     offs.append(collisions.rotateBy0((self.movement, 0), norm))
                 off = (sum(i[0] for i in offs), sum(i[1] for i in offs))
-                self._velocity = [self._velocity[0] + off[0],
-                                  self._velocity[1] + off[1]]
+                self.velocity = [self.velocity[0] + off[0],
+                                  self.velocity[1] + off[1]]
         else:
             self.gravity = [0, 0]
             self.handle_keys()
@@ -157,7 +157,7 @@ class BaseEntity(Ss.BaseEntity):
             colls = self.Game.currentScene.collider()
         else:
             colls = collisions.Shapes()
-        outRect, self._velocity = thisObj.handleCollisionsVel(self._velocity, colls, False)
+        outRect, self.velocity = thisObj.handleCollisionsVel(self.velocity, colls, False)
         self.pos = self.entity.unscale_pos(outRect)
     
     @property
@@ -218,15 +218,29 @@ class MainGameScene(Ss.BaseScene):
         self._collider = collisions.Shapes(*colls)#, *self.Game.currentLvL.GetAllEntities(CollProcessor))
         return self._collider
 
-    def _postProcess(self):
+    def postProcessGlobal(self, sur):
+        return self._Rotate(sur.copy())
+    
+    def postProcessScreen(self, sur):
         player = self.entities[0]
-        pos = player.scaled_pos
-        sur = self.sur.copy()
-        pygame.draw.circle(sur, (0, 0, 0), pos, 7)
-        pygame.draw.circle(sur, (255, 255, 255), pos, 7, 2)
-        # pygame.draw.line(sur, (125, 125, 125), pos, (pos[0]+player._velocity[0]*10, pos[1]+player._velocity[1]*10), 2)
-        # pygame.draw.line(sur, (255, 50, 50), pos, (pos[0]+player._velocity[0]*10, pos[1]+player._velocity[1]*10), 2)
-        return self._Rotate(sur)
+        camPos = self.CamPos
+        diff = (
+            camPos[0] - round(player.scaled_pos[0]-self.off[0]),
+            camPos[1] - round(player.scaled_pos[1]-self.off[1])
+        )
+        centre = (self.Game.size[0]/2, self.Game.size[1]/2)
+        # Basically, where it should be (in the centre) - where it is (which may change later)
+        playerPos = ((centre[0]-diff[0])/self.CamDist, (centre[1]-diff[1])/self.CamDist)
+
+        pygame.draw.circle(sur, (0, 0, 0), playerPos, 7)
+        pygame.draw.circle(sur, (255, 255, 255), playerPos, 7, 2)
+
+        # Debugging scripts
+        # sur.blit(pygame.font.Font(None, 30).render(str(playerPos), True, (255, 255, 255)), (0, 0))
+        # vel = collisions.rotateBy0(player.velocity, -self.lastGrav)
+        # pygame.draw.line(sur, (125, 125, 125), playerPos, (playerPos[0]+vel[0]*10, playerPos[1]+vel[1]*10), 2)
+
+        return sur
 
     def _Rotate(self, sur):
         match self.entities[0].camType:
@@ -239,11 +253,12 @@ class MainGameScene(Ss.BaseScene):
                 if self.lastGrav is None:
                     self.lastGrav = 0
                 gravang = self.lastGrav
+    
         if self.lastGrav is None:
             self.lastGrav = gravang
         else:
-            angOpts = [gravang, gravang-360, gravang+360]
-            gravang = min(angOpts, key=lambda x: abs(x-self.lastGrav))
+            angOpts = [gravang, gravang - 360, gravang + 360]
+            gravang = min(angOpts, key=lambda x: abs(x - self.lastGrav))
             if self.lastGrav > gravang:
                 self.lastGrav -= self.gravChangeSpeed
                 if self.lastGrav < gravang:
@@ -252,27 +267,24 @@ class MainGameScene(Ss.BaseScene):
                 self.lastGrav += self.gravChangeSpeed
                 if self.lastGrav > gravang:
                     self.lastGrav = gravang
-            
-            self.lastGrav = self.lastGrav % 360
-        
+            self.lastGrav %= 360
+    
         ang = self.lastGrav
-        rotated_sur = pygame.transform.rotozoom(sur, ang, 1) # Smooth
-        # rotated_sur = pygame.transform.rotate(sur, ang) # Pixelated
+        rotated_sur = pygame.transform.rotozoom(sur, ang, 1)
         old_center = sur.get_rect().center
         rotated_rect = rotated_sur.get_rect()
+    
         playerPos = self.entities[0].scaled_pos
         newPos = collisions.rotate(old_center, playerPos, -ang)
-        diff = (newPos[0]-playerPos[0], newPos[1]-playerPos[1])
-        rotated_rect.center = (
-            old_center[0] - diff[0],
-            old_center[1] - diff[1]
-        )
+        diff = (newPos[0] - playerPos[0], newPos[1] - playerPos[1])
+        rotated_rect.center = (old_center[0] - diff[0], old_center[1] - diff[1])
         self.off = rotated_rect.topleft
+    
         return rotated_sur
 
     def render(self):
         if self.sur is not None and debug.showingColls == self.showingColls:
-            return self._postProcess()
+            return self.sur
         self.showingColls = debug.showingColls
         self.sur = self.Game.world.get_pygame(self.lvl, True)
         for e in self.Game.world.get_level(self.lvl).entities:
@@ -288,7 +300,7 @@ class MainGameScene(Ss.BaseScene):
                         pygame.draw.rect(self.sur, col, (s.x, s.y, s.w, s.h), 1)
                     elif isinstance(s, collisions.Circle):
                         pygame.draw.circle(self.sur, col, (s.x, s.y), s.r, 1)
-        return self._postProcess()
+        return self.sur
 
 G.load_scene()
 
