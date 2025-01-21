@@ -55,6 +55,8 @@ class BaseEntity(Ss.BaseEntity):
         self.jump = 10 # Change in velocity when jumping
         self.grav_amount = 0.7 # Gravity strength
 
+        self.hitSize = 2 # Radius of circle hitbox
+
         self.gravType = None
         self.gravDir = None
         self.camType = None
@@ -63,7 +65,7 @@ class BaseEntity(Ss.BaseEntity):
     def __call__(self, evs):
         es = self.Game.currentLvL.GetEntitiesByLayer('GravityFields')
         oldPos = self.scaled_pos
-        thisObj = collisions.Circle(*oldPos, 2)
+        thisObj = collisions.Circle(*oldPos, self.hitSize)
         if not debug.globalMove:
             transform = {i: CollProcessor(i) for i in es}
             objs = list(transform.values())
@@ -98,7 +100,8 @@ class BaseEntity(Ss.BaseEntity):
                 self.camType = findFieldInstance(self.entity, 'DefCamera')
                 self.camDir = findFieldInstance(self.entity, 'CameraDir')
             if invert is None:
-                invert = findFieldInstance(self.entity, 'DefInvertControls')
+                if self.gravType != 'Nearest':
+                    invert = findFieldInstance(self.entity, 'DefInvertControls')
 
             cpoints = None
             match self.gravType:
@@ -122,9 +125,17 @@ class BaseEntity(Ss.BaseEntity):
             if cpoints is not None:
                 cpoints.sort(key=lambda x: (thisObj.x-x[0][0])**2+(thisObj.y-x[0][1])**2)
                 closest = cpoints[0][0]
+                closestObj = cpoints[0][1]
+                if invert is None:
+                    for obj, coll in transform.items():
+                        if coll == closestObj:
+                            invert = findFieldInstance(obj, 'InvertControls')
+                            break
+                    else:
+                        invert = findFieldInstance(self.entity, 'DefInvertControls')
                 ydiff, xdiff = thisObj.y-closest[1], thisObj.x-closest[0]
                 angle = collisions.direction(closest, thisObj)
-                tan = cpoints[0][1].tangent(closest, [-xdiff, -ydiff])
+                tan = closestObj.tangent(closest, [-xdiff, -ydiff])
                 norm = tan-90
                 self.gravity = collisions.pointOnCircle(angle, -self.grav_amount)
             
@@ -229,7 +240,7 @@ class MainGameScene(Ss.BaseScene):
             camPos[1] - round(player.scaled_pos[1]-self.off[1])
         )
         centre = (self.Game.size[0]/2, self.Game.size[1]/2)
-        # Basically, where it should be (in the centre) - where it is (which may change later)
+        # Basically, where it is (which may change later) - where it should be (in the centre)
         playerPos = ((centre[0]-diff[0])/self.CamDist, (centre[1]-diff[1])/self.CamDist)
 
         sze = 16
@@ -254,6 +265,21 @@ class MainGameScene(Ss.BaseScene):
                 gravang = (gravang + self.entities[0].camDir) % 360
             case 'Global':
                 gravang = (self.entities[0].camDir) % 360
+            case 'AroundClosest':
+                thisObj = collisions.Circle(*self.entities[0].scaled_pos, self.entities[0].hitSize)
+                d = None
+                dir = None
+                clo = None
+                for e in self.currentLvl.GetEntitiesByLayer('GravityFields'):
+                    p2 = CollProcessor(e).closestPointTo(thisObj)
+                    d2 = (thisObj.x-p2[0])**2+(thisObj.y-p2[1])**2
+                    if d is None or d2 < d:
+                        d = d2
+                        dir = [i['__value'] for i in e.fieldInstances if i['__identifier'] == 'CameraDir'][0]
+                        clo = p2
+                
+                gravang = math.degrees(collisions.direction(clo, thisObj))-90
+                gravang = (gravang + dir + 180) % 360
             case 'AsIs':
                 if self.lastGrav is None:
                     self.lastGrav = 0
