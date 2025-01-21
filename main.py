@@ -232,8 +232,13 @@ class MainGameScene(Ss.BaseScene):
         # Basically, where it should be (in the centre) - where it is (which may change later)
         playerPos = ((centre[0]-diff[0])/self.CamDist, (centre[1]-diff[1])/self.CamDist)
 
-        pygame.draw.circle(sur, (0, 0, 0), playerPos, 7)
-        pygame.draw.circle(sur, (255, 255, 255), playerPos, 7, 2)
+        sze = 16
+        playerSur = pygame.Surface((sze, sze), pygame.SRCALPHA)
+        pygame.draw.circle(playerSur, (0, 0, 0), (sze/2, sze/2), 7)
+        pygame.draw.circle(playerSur, (255, 255, 255), (sze/2, sze/2), 7, 2)
+        playerSur = pygame.transform.rotozoom(playerSur, -self.lastGrav%45+22.5, 1) # smooth
+        # playerSur = pygame.transform.rotate(playerSur, -self.lastGrav) # pixelated
+        sur.blit(playerSur, (playerPos[0]-sze/2, playerPos[1]-sze/2))
 
         # Debugging scripts
         # sur.blit(pygame.font.Font(None, 30).render(str(playerPos), True, (255, 255, 255)), (0, 0))
