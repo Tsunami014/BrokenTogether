@@ -46,14 +46,14 @@ class BaseEntity(Ss.BaseEntity):
     def __init__(self, Game, entity):
         super().__init__(Game, entity)
         # Each value is in units per frame unless specified
-        self.max_speed = 200  # Max speed
+        self.max_speed = 50  # Max speed
         self.friction = 0.03  # Friction (applied each frame) (in percent of current speed)
         self.not_hold_fric = 0.1 # ADDED friction to apply when not holding ANY KEY (you can modify this to be only left-right or whatever) (in percent of current speed)
-        self.not_hold_grav = [0.5, 0.5] # Decrease in gravity to apply when not holding THE UP KEY (in percent of current gravity strength)
+        self.not_hold_grav = [0.6, 0.6] # Decrease in gravity to apply when not holding THE UP KEY (in percent of current gravity strength)
 
         self.movement = 0.5 # How much you move left/right each frame
-        self.jump = 150 # Change in velocity when jumping
-        self.grav_amount = 0.6 # Gravity strength
+        self.jump = 10 # Change in velocity when jumping
+        self.grav_amount = 0.7 # Gravity strength
 
         self.gravType = None
         self.gravDir = None
@@ -141,7 +141,7 @@ class BaseEntity(Ss.BaseEntity):
             if keys[pygame.K_LEFT] ^ keys[pygame.K_RIGHT] or jmp:
                 offs = [(0, 0)]
                 if jmp:
-                    offs.append(collisions.rotateBy0((0, -15), norm + (180 if invert else 0)))
+                    offs.append(collisions.rotateBy0((0, -self.jump), norm + (180 if invert else 0)))
                 if keys[pygame.K_LEFT]:
                     offs.append(collisions.rotateBy0((-self.movement, 0), norm))
                 elif keys[pygame.K_RIGHT]:
