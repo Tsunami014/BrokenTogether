@@ -40,9 +40,11 @@
  - `icons.png`: https://zeromatrix.itch.io/rpgiab-icons
 
 ## Backgrounds
- - Some backgrounds from `@aquatic_ambi`: https://t.co/PSU1ixf2gO
-    - `Galaxy1.jpg`
- - Some screenshotted from https://noclip.website/
+ - Some backgrounds screenshotted from https://noclip.website/
+    - `CentreOfTheUniverse.png`
+    - `SnowCap.png`
+    - `Terrace.png`
+    - `Loopdeeloop.png`
     - `GustyGarden.png`
     - `Observatory.png`
 
