@@ -1,16 +1,60 @@
 import math
+import os
 from BlazeSudio import ldtk, collisions
 from BlazeSudio.Game import Game
-from BlazeSudio.graphics.GUI import Toast
-import BlazeSudio.Game.statics as Ss
+from BlazeSudio.graphics import Screen, GUI, options as GO
 from BlazeSudio.utils import approximate_polygon
+import BlazeSudio.Game.statics as Ss
 import pygame
 
 # TODO: Each level inside a level file is all in the one scene, but they are just not loaded if they are not visible
 
 G = Game()
 G.set_caption('Broken Together')
-G.load_map("./assets/levels/level1/main.ldtk")
+
+def load_level(lvl):
+    pth = f"./assets/levels/{lvl}/main.ldtk"
+    if not os.path.exists(pth):
+        G.UILayer.append(GUI.Toast(G, 'Map does not exist! Use `/maps` to see all the maps', GO.CRED))
+        return
+    G.load_map(pth)
+    if G.currentScene is not None:
+        G.load_scene(MainGameScene)
+
+def find_levels():
+    return [i for i in os.listdir('./assets/levels') if os.path.isdir(f'./assets/levels/{i}')]
+
+load_level('level1')
+
+class MapScreen(Screen):
+    def __init__(self, Game):
+        super().__init__()
+        self.Game = Game
+    
+    def _LoadUI(self):
+        self.layers[0].add('Main')
+        LTOP = GO.PNEW((0, 0), (0, 1))
+        t = GUI.Text(self, LTOP, 'Maps:', font=GO.FTITLE)
+        f = GUI.ScrollableFrame(self, LTOP, (self.size[0], self.size[1]-t.size[1]), (0, 0))
+        self['Main'].extend([t, f])
+        f.layers[0].add('Main')
+        GRID = GO.PNEW((0, 0), (1, 1))
+        e = GUI.Empty(f, GRID, (10, 10))
+        g = GUI.GridLayout(f, GRID)
+        f['Main'].extend([e, g])
+        rainbow = GO.CRAINBOW()
+        def func(lvl):
+            load_level(lvl)
+            self.Abort()
+        btns = [
+            GUI.Button(g, g.LP, next(rainbow), i, func=lambda lvl=i: func(lvl))
+            for i in find_levels()
+        ]
+        cols = math.ceil(math.sqrt(len(btns)))
+        g.grid = [
+            btns[i*cols:(i+1)*cols] for i in range(cols)
+        ]
+        f.sizeOfScreen = (max(self.size[0], g.size[0]+20), max(self.size[1]-t.size[1], g.size[1]+20))
 
 class DebugCommands:
     def __init__(self, Game):
@@ -21,18 +65,20 @@ class DebugCommands:
         self.Game.AddCommand('/colls', 'Toggle collision debug', self.toggleColls)
         self.Game.AddCommand('/ignore', 'Toggle collision ignore', self.toggleIgnore)
         self.Game.AddCommand('/global', 'Toggle global movement', self.toggleGlobal)
+        self.Game.AddCommand('/load', 'Load a specific map', load_level)
+        self.Game.AddCommand('/map', 'Show all the maps', MapScreen(Game))
     
     def toggleColls(self):
         self.showingColls = not self.showingColls
-        G.UILayer.append(Toast(G, ('Showing' if self.showingColls else 'Not showing') + ' collisions'))
+        G.UILayer.append(GUI.Toast(G, ('Showing' if self.showingColls else 'Not showing') + ' collisions'))
     
     def toggleIgnore(self):
         self.colliding = not self.colliding
-        G.UILayer.append(Toast(G, ('Applying' if self.colliding else 'Ignoring') + ' collisions'))
+        G.UILayer.append(GUI.Toast(G, ('Applying' if self.colliding else 'Ignoring') + ' collisions'))
     
     def toggleGlobal(self):
         self.globalMove = not self.globalMove
-        G.UILayer.append(Toast(G, 'Moving '+('globally' if self.globalMove else 'planet-based')))
+        G.UILayer.append(GUI.Toast(G, 'Moving '+('globally' if self.globalMove else 'planet-based')))
 
 debug = DebugCommands(G)
 

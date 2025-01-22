@@ -19,6 +19,23 @@
             "program": "${file}",
             "justMyCode": false,
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Run wrap.py in specified folder",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/wrap.py",
+            "args": ["run_sync"],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "cwd": "${workspaceFolder}/assets/levels/${input:folderName}"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "folderName",
+            "type": "promptString",
+            "description": "Enter the folder name"
         }
     ]
 }
