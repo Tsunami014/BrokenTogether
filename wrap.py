@@ -17,7 +17,9 @@ pygame.init()
 pygame.display.set_mode()
 pygame.display.toggle_fullscreen()
 
-world = world.World(os.getcwd()+'/main.ldtk')
+worldCwd = os.getcwd()
+
+world = world.World(worldCwd+'/main.ldtk')
 
 if '/brokenTogether' not in os.getcwd():
     raise FileNotFoundError('I HAVE NO IDEA WHERE I AM PANIK PANIK PANIK!!!!!!!!!!')
@@ -97,20 +99,19 @@ def run(slf):
             imgs[1].append(i2)
 
     yield 'Saving', {'formatter': DEFAULT_FORMAT_FUNC, 'amount': 100, 'done': 99}
-    pth = os.getcwd()+'/assets/'
 
     blanks = wrap.find_blanks(imgs[0], imgs[1])
     if chosen.lvl is None:
-        wrap.save(imgs[0], pth+"generated/out.png", 256, blanks)
-        wrap.save(imgs[1], pth+"generated/colls.png", 256, blanks)
-        wrap.saveData(imgs[0], pth+"generated/dat.txt", [
+        wrap.save(imgs[0], worldCwd+"/generated/out.png", 256, blanks)
+        wrap.save(imgs[1], worldCwd+"/generated/colls.png", 256, blanks)
+        wrap.saveData(imgs[0], worldCwd+"/generated/dat.txt", [
             world.ldtk.levels[lvl].identifier for lvl in range(len(world.ldtk.levels)) if any(
                 e.identifier == 'WrapSettings' for e in world.ldtk.levels[lvl].entities
             )
         ], 256, blanks)
     else:
         name = chosen.get()
-        wrap.update(imgs[0][0], name, pth+"generated/out.png", pth+"generated/dat.txt", 256, blanks[0])
-        wrap.update(imgs[1][0], name, pth+"generated/colls.png", pth+"generated/dat.txt", 256, blanks[0])
+        wrap.update(imgs[0][0], name, worldCwd+"/generated/out.png", worldCwd+"/generated/dat.txt", 256, blanks[0])
+        wrap.update(imgs[1][0], name, worldCwd+"/generated/colls.png", worldCwd+"/generated/dat.txt", 256, blanks[0])
 
 run()
