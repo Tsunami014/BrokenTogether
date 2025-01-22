@@ -61,65 +61,77 @@ class BaseEntity(Ss.BaseEntity):
         self.gravDir = None
         self.camType = None
         self.camDir = None
+        self.camDist = None
 
     def __call__(self, evs):
-        es = self.Game.currentLvL.GetEntitiesByLayer('GravityFields')
+        es = self.Game.currentLvL.GetEntitiesByLayer('Fields')
         oldPos = self.scaled_pos
         thisObj = collisions.Circle(*oldPos, self.hitSize)
         if not debug.globalMove:
             transform = {i: CollProcessor(i) for i in es}
-            objs = list(transform.values())
-            gravs = [i for i in es if transform[i].collides(thisObj)]
             def findFieldInstance(e, name):
-                return [i['__value'] for i in e.fieldInstances if i['__identifier'] == name][0]
-            gravs.sort(key=lambda x: (-findFieldInstance(x, 'Layer')))
+                fields = [i['__value'] for i in e.fieldInstances if i['__identifier'] == name]
+                return fields[0] if fields else None
+            collEs = [i for i in es if transform[i].collides(thisObj)]
+            collEs.sort(key=lambda x: (-findFieldInstance(x, 'Layer')))
 
             self.gravType = None
             self.gravDir = None
             self.camType = None
             self.camDir = None
+            self.camDist = None
             invert = None
 
-            for g in gravs:
+            specifier = None
+
+            for g in collEs:
                 if self.gravType is None:
                     self.gravType = findFieldInstance(g, 'GravityType')
+                    specifier = g
+                if self.gravDir is None:
                     self.gravDir = findFieldInstance(g, 'GravityDir')
                 if self.camType is None:
                     camTyp = findFieldInstance(g, 'Camera')
                     if camTyp == 'Parent':
                         continue
                     self.camType = camTyp
+                if self.camDir is None:
                     self.camDir = findFieldInstance(g, 'CameraDir')
+                if self.camDist is None:
+                    self.camDist = findFieldInstance(g, 'CamDist')
                 if invert is None:
                     invert = findFieldInstance(g, 'InvertControls')
             
             if self.gravType is None:
                 self.gravType = findFieldInstance(self.entity, 'DefGravityType')
-                self.gravDir = findFieldInstance(self.entity, 'GravityDir')
+            if self.gravDir is None:
+                self.gravDir = findFieldInstance(self.entity, 'DefGravityDir')
             if self.camType is None:
                 self.camType = findFieldInstance(self.entity, 'DefCamera')
-                self.camDir = findFieldInstance(self.entity, 'CameraDir')
-            if invert is None:
-                if self.gravType != 'Nearest':
-                    invert = findFieldInstance(self.entity, 'DefInvertControls')
+            if self.camDir is None:
+                self.camDir = findFieldInstance(self.entity, 'DefCameraDir')
+            if self.camDist is None:
+                self.camDist = findFieldInstance(self.entity, 'DefCamDist')
+            if invert is None and self.gravType != 'Nearest':
+                invert = findFieldInstance(self.entity, 'DefInvertControls')
 
             cpoints = None
             match self.gravType:
                 case 'Global':
-                    self.gravity = collisions.pointOnCircle(self.gravDir-90, self.grav_amount)
+                    self.gravity = collisions.pointOnCircle(math.radians(self.gravDir+90), self.grav_amount)
                     norm = self.gravDir
                 case 'Nearest':
-                    cpoints = [(i.closestPointTo(thisObj), i) for i in objs]
+                    cpoints = [(i.closestPointTo(thisObj), i) for e, i in transform.items() if 'Gravity' in e.identifier]
                 case 'NoGrav':
                     self.gravity = [0, 0]
                     norm = math.degrees(collisions.direction((0, 0), self.velocity))-90
                 case 'Inwards':
-                    collObj = transform[gravs[0]]
+                    collObj = transform[specifier]
                     r = collObj.rect()
                     midp = ((r[2]-r[0])/2+r[0], (r[3]-r[1])/2+r[1])
                     cpoints = [(midp, collisions.Point(*midp))]
                 case 'Outwards':
-                    collObj = transform[gravs[0]]
+                    collObj = transform[specifier]
                     cpoints = [(collObj.closestPointTo(thisObj), collObj)]
             
             if cpoints is not None:
@@ -184,9 +196,10 @@ class MainGameScene(Ss.BaseScene):
         self.showingColls = True
         self._collider = None
         self.off = [0, 0]
-        self.lastGrav = None
+        self.lastCam = None
         self.gravChangeSpeed = 4 # TODO: When we have a player sprite, make the camera go slower than the player's spin animation
         self.CamDist = 4
+        self.CamChangeSpeed = 0.1
         self.CamBounds = [None, None, None, None]
         es = self.currentLvl.GetEntitiesByUID(6) # The Player
         if es:
@@ -247,7 +260,7 @@ class MainGameScene(Ss.BaseScene):
         playerSur = pygame.Surface((sze, sze), pygame.SRCALPHA)
         pygame.draw.circle(playerSur, (0, 0, 0), (sze/2, sze/2), 7)
         pygame.draw.circle(playerSur, (255, 255, 255), (sze/2, sze/2), 7, 2)
-        playerSur = pygame.transform.rotozoom(playerSur, -self.lastGrav%45+22.5, 1) # smooth
+        playerSur = pygame.transform.rotozoom(playerSur, -self.lastCam%45+22.5, 1) # smooth
         # playerSur = pygame.transform.rotate(playerSur, -self.lastGrav) # pixelated
         sur.blit(playerSur, (playerPos[0]-sze/2, playerPos[1]-sze/2))
 
@@ -255,22 +268,26 @@ class MainGameScene(Ss.BaseScene):
         # sur.blit(pygame.font.Font(None, 30).render(str(playerPos), True, (255, 255, 255)), (0, 0))
         # vel = collisions.rotateBy0(player.velocity, -self.lastGrav)
         # pygame.draw.line(sur, (125, 125, 125), playerPos, (playerPos[0]+vel[0]*10, playerPos[1]+vel[1]*10), 2)
+        # grav = collisions.rotateBy0(player.gravity, -self.lastCam)
+        # pygame.draw.line(sur, (125, 125, 125), playerPos, (playerPos[0]+grav[0]*100, playerPos[1]+grav[1]*100), 2)
 
         return sur
 
     def _Rotate(self, sur):
         match self.entities[0].camType:
             case 'AroundPlayer':
-                gravang = math.degrees(collisions.direction((0, 0), self.entities[0].gravity))-90
-                gravang = (gravang + self.entities[0].camDir) % 360
+                camang = math.degrees(collisions.direction((0, 0), self.entities[0].gravity))-90
+                camang = (camang + self.entities[0].camDir) % 360
             case 'Global':
-                gravang = (self.entities[0].camDir) % 360
+                camang = (self.entities[0].camDir) % 360
             case 'AroundClosest':
                 thisObj = collisions.Circle(*self.entities[0].scaled_pos, self.entities[0].hitSize)
                 d = None
                 dir = None
                 clo = None
-                for e in self.currentLvl.GetEntitiesByLayer('GravityFields'):
+                for e in self.currentLvl.GetEntitiesByLayer('Fields'):
+                    if 'Gravity' not in e.identifier:
+                        continue
                     p2 = CollProcessor(e).closestPointTo(thisObj)
                     d2 = (thisObj.x-p2[0])**2+(thisObj.y-p2[1])**2
                     if d is None or d2 < d:
@@ -278,35 +295,39 @@ class MainGameScene(Ss.BaseScene):
                         dir = [i['__value'] for i in e.fieldInstances if i['__identifier'] == 'CameraDir'][0]
                         clo = p2
                 
-                gravang = math.degrees(collisions.direction(clo, thisObj))-90
-                gravang = (gravang + dir + 180) % 360
+                if d is None:
+                    if self.lastCam is None:
+                        self.lastCam = 0
+                    camang = self.lastCam
+                else:
+                    camang = math.degrees(collisions.direction(clo, thisObj))-90
+                    camang = (camang + dir + 180) % 360
             case 'AsIs':
-                if self.lastGrav is None:
-                    self.lastGrav = 0
-                gravang = self.lastGrav
+                if self.lastCam is None:
+                    self.lastCam = 0
+                camang = self.lastCam
     
-        if self.lastGrav is None:
-            self.lastGrav = gravang
+        if self.lastCam is None:
+            self.lastCam = camang
         else:
-            angOpts = [gravang, gravang - 360, gravang + 360]
-            gravang = min(angOpts, key=lambda x: abs(x - self.lastGrav))
-            if self.lastGrav > gravang:
-                self.lastGrav -= self.gravChangeSpeed
-                if self.lastGrav < gravang:
-                    self.lastGrav = gravang
-            elif self.lastGrav < gravang:
-                self.lastGrav += self.gravChangeSpeed
-                if self.lastGrav > gravang:
-                    self.lastGrav = gravang
-            self.lastGrav %= 360
+            angOpts = [camang, camang - 360, camang + 360]
+            camang = min(angOpts, key=lambda x: abs(x - self.lastCam))
+            if self.lastCam > camang:
+                self.lastCam -= self.gravChangeSpeed
+                if self.lastCam < camang:
+                    self.lastCam = camang
+            elif self.lastCam < camang:
+                self.lastCam += self.gravChangeSpeed
+                if self.lastCam > camang:
+                    self.lastCam = camang
+            self.lastCam %= 360
     
-        ang = self.lastGrav
-        rotated_sur = pygame.transform.rotozoom(sur, ang, 1)
+        rotated_sur = pygame.transform.rotozoom(sur, self.lastCam, 1)
         old_center = sur.get_rect().center
         rotated_rect = rotated_sur.get_rect()
     
         playerPos = self.entities[0].scaled_pos
-        newPos = collisions.rotate(old_center, playerPos, -ang)
+        newPos = collisions.rotate(old_center, playerPos, -self.lastCam)
         diff = (newPos[0] - playerPos[0], newPos[1] - playerPos[1])
         rotated_rect.center = (old_center[0] - diff[0], old_center[1] - diff[1])
         self.off = rotated_rect.topleft
@@ -314,6 +335,10 @@ class MainGameScene(Ss.BaseScene):
         return rotated_sur
 
     def render(self):
+        nCamDist = self.entities[0].camDist
+        if nCamDist:
+            self.CamDist = min(max(nCamDist, self.CamDist-self.CamChangeSpeed), self.CamDist+self.CamChangeSpeed)
+
         if self.sur is not None and debug.showingColls == self.showingColls:
             return self.sur
         self.showingColls = debug.showingColls
@@ -322,8 +347,10 @@ class MainGameScene(Ss.BaseScene):
             if e.layerId.startswith('Entities'):
                 self.sur.blit(e.get_tile(), e.ScaledPos)
         if self.showingColls:
-            colls = self.collider()
-            for col, li in (((255, 10, 50), colls), ((10, 50, 255), self.Game.currentLvL.GetEntitiesByLayer('GravityFields', CollProcessor))):
+            for col, li in (
+                    ((255, 10, 50), self.collider()), 
+                    ((10, 50, 255), self.Game.currentLvL.GetEntitiesByLayer('Fields', CollProcessor))
+                ):
                 for s in li:
                     if isinstance(s, collisions.Polygon):
                         pygame.draw.polygon(self.sur, col, s.toPoints(), 1)
