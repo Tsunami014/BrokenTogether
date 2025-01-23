@@ -62,11 +62,11 @@ class DebugCommands:
         self.showingColls = False
         self.colliding = True
         self.globalMove = False
-        self.Game.AddCommand('/colls', 'Toggle collision debug', self.toggleColls)
-        self.Game.AddCommand('/ignore', 'Toggle collision ignore', self.toggleIgnore)
-        self.Game.AddCommand('/global', 'Toggle global movement', self.toggleGlobal)
-        self.Game.AddCommand('/load', 'Load a specific map', load_level)
-        self.Game.AddCommand('/map', 'Show all the maps', MapScreen(Game))
+        self.Game.AddCommand('colls', 'Toggle collision debug', self.toggleColls)
+        self.Game.AddCommand('ignore', 'Toggle collision ignore', self.toggleIgnore)
+        self.Game.AddCommand('global', 'Toggle global movement', self.toggleGlobal)
+        self.Game.AddCommand('load', 'Load a specific map', load_level)
+        self.Game.AddCommand('map', 'Show all the maps', MapScreen(Game))
     
     def toggleColls(self):
         self.showingColls = not self.showingColls
