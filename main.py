@@ -1,5 +1,6 @@
 import math
 import os
+import time
 from BlazeSudio import ldtk, collisions
 from BlazeSudio.Game import Game
 from BlazeSudio.graphics import Screen, GUI, options as GO
@@ -64,10 +65,10 @@ class DebugCommands:
         self.Game = Game
         self.showingColls = False
         self.colliding = True
-        self.globalMove = False
+        self.showFPS = False
         self.Game.AddCommand('colls', '/colls ... : Toggle collision debug', self.toggleColls)
         self.Game.AddCommand('ignore', '/ignore ... : Toggle collision ignore', self.toggleIgnore)
-        self.Game.AddCommand('global', '/global ... : Toggle global movement', self.toggleGlobal)
+        self.Game.AddCommand('fps', '/fps ... : Toggle FPS counter', self.toggleFPS)
         self.Game.AddCommand('load', '/load <name-str> ... : Load a specific map', load_level)
         self.Game.AddCommand('map', '/map ... : Show all the maps', MapScreen(Game))
     
@@ -79,9 +80,9 @@ class DebugCommands:
         self.colliding = not self.colliding
         G.UILayer.append(GUI.Toast(G, ('Applying' if self.colliding else 'Ignoring') + ' collisions'))
     
-    def toggleGlobal(self, *args):
-        self.globalMove = not self.globalMove
-        G.UILayer.append(GUI.Toast(G, 'Moving '+('globally' if self.globalMove else 'planet-based')))
+    def toggleFPS(self, *args):
+        self.showFPS = not self.showFPS
+        G.UILayer.append(GUI.Toast(G, ('Showing' if self.showFPS else 'Hiding')+' FPS'))
 
 debug = DebugCommands(G)
 
@@ -96,13 +97,13 @@ class BaseEntity(Ss.BaseEntity):
         super().__init__(Game, entity)
         # Each value is in units per frame unless specified
         self.max_speed = 50  # Max speed
-        self.friction = 0.06  # Friction (applied each frame) (in percent of current speed)
+        self.friction = 0.08  # Friction (applied each frame) (in percent of current speed)
         self.not_hold_fric = 0.1 # ADDED friction to apply when not holding ANY KEY (you can modify this to be only left-right or whatever) (in percent of current speed)
-        self.not_hold_grav = [0.45, 0.45] # Decrease in gravity to apply when not holding THE UP KEY (in percent of current gravity strength)
+        self.not_hold_grav = [0.5, 0.5] # Decrease in gravity to apply when not holding THE UP KEY (in percent of current gravity strength)
 
         self.movement = 0.5 # How much you move left/right each frame
-        self.jump = 18 # Change in velocity when jumping
-        self.grav_amount = 0.8 # Gravity strength
+        self.jump = 22 # Change in velocity when jumping
+        self.grav_amount = 1.0 # Gravity strength
 
         self.hitSize = 3 # Radius of circle hitbox
 
@@ -116,114 +117,110 @@ class BaseEntity(Ss.BaseEntity):
         es = self.Game.currentLvL.GetEntitiesByLayer('Fields')
         oldPos = self.scaled_pos
         thisObj = collisions.Circle(*oldPos, self.hitSize)
-        if not debug.globalMove:
-            transform = {i: CollProcessor(i) for i in es}
-            def findFieldInstance(e, name):
-                fields = [i['__value'] for i in e.fieldInstances if i['__identifier'] == name]
-                return fields[0] if fields else None
-            collEs = [i for i in es if transform[i].collides(thisObj)]
-            collEs.sort(key=lambda x: (-findFieldInstance(x, 'Layer')))
+        transform = {i: CollProcessor(i) for i in es}
+        def findFieldInstance(e, name):
+            fields = [i['__value'] for i in e.fieldInstances if i['__identifier'] == name]
+            return fields[0] if fields else None
+        collEs = [i for i in es if transform[i].collides(thisObj)]
+        collEs.sort(key=lambda x: (-findFieldInstance(x, 'Layer')))
 
-            self.gravType = None
-            self.gravDir = None
-            self.camType = None
-            self.camDir = None
-            self.camDist = None
-            invert = None
+        self.gravType = None
+        self.gravDir = None
+        self.camType = None
+        self.camDir = None
+        self.camDist = None
+        invert = None
 
-            specifier = None
+        specifier = None
 
-            for g in collEs:
-                if self.gravType is None:
-                    self.gravType = findFieldInstance(g, 'GravityType')
-                    specifier = g
-                if self.gravDir is None:
-                    self.gravDir = findFieldInstance(g, 'GravityDir')
-                if self.camType is None:
-                    camTyp = findFieldInstance(g, 'Camera')
-                    if camTyp == 'Parent':
-                        continue
-                    self.camType = camTyp
-                if self.camDir is None:
-                    self.camDir = findFieldInstance(g, 'CameraDir')
-                if self.camDist is None:
-                    self.camDist = findFieldInstance(g, 'CamDist')
-                if invert is None:
-                    invert = findFieldInstance(g, 'InvertControls')
-            
+        for g in collEs:
             if self.gravType is None:
-                self.gravType = findFieldInstance(self.entity, 'DefGravityType')
+                self.gravType = findFieldInstance(g, 'GravityType')
+                specifier = g
             if self.gravDir is None:
-                self.gravDir = findFieldInstance(self.entity, 'DefGravityDir')
+                self.gravDir = findFieldInstance(g, 'GravityDir')
             if self.camType is None:
-                self.camType = findFieldInstance(self.entity, 'DefCamera')
+                camTyp = findFieldInstance(g, 'Camera')
+                if camTyp == 'Parent':
+                    continue
+                self.camType = camTyp
             if self.camDir is None:
-                self.camDir = findFieldInstance(self.entity, 'DefCameraDir')
+                self.camDir = findFieldInstance(g, 'CameraDir')
             if self.camDist is None:
-                self.camDist = findFieldInstance(self.entity, 'DefCamDist')
-            if invert is None and self.gravType != 'Nearest':
-                invert = findFieldInstance(self.entity, 'DefInvertControls')
+                self.camDist = findFieldInstance(g, 'CamDist')
+            if invert is None:
+                invert = findFieldInstance(g, 'InvertControls')
+        
+        if self.gravType is None:
+            self.gravType = findFieldInstance(self.entity, 'DefGravityType')
+        if self.gravDir is None:
+            self.gravDir = findFieldInstance(self.entity, 'DefGravityDir')
+        if self.camType is None:
+            self.camType = findFieldInstance(self.entity, 'DefCamera')
+        if self.camDir is None:
+            self.camDir = findFieldInstance(self.entity, 'DefCameraDir')
+        if self.camDist is None:
+            self.camDist = findFieldInstance(self.entity, 'DefCamDist')
+        if invert is None and self.gravType != 'Nearest':
+            invert = findFieldInstance(self.entity, 'DefInvertControls')
 
-            cpoints = None
-            match self.gravType:
-                case 'Global':
-                    self.gravity = collisions.pointOnCircle(math.radians(self.gravDir+90), self.grav_amount)
-                    norm = self.gravDir
-                case 'Nearest':
-                    cpoints = [(i.closestPointTo(thisObj), i) for e, i in transform.items() if 'Gravity' in e.identifier]
-                case 'NoGrav':
-                    self.gravity = [0, 0]
-                    norm = math.degrees(collisions.direction((0, 0), self.velocity))-90
-                case 'Inwards':
-                    collObj = transform[specifier]
-                    r = collObj.rect()
-                    midp = ((r[2]-r[0])/2+r[0], (r[3]-r[1])/2+r[1])
-                    cpoints = [(midp, collisions.Point(*midp))]
-                case 'Outwards':
-                    collObj = transform[specifier]
-                    cpoints = [(collObj.closestPointTo(thisObj), collObj)]
-            
-            if cpoints is not None:
-                cpoints.sort(key=lambda x: (thisObj.x-x[0][0])**2+(thisObj.y-x[0][1])**2)
-                closest = cpoints[0][0]
-                closestObj = cpoints[0][1]
-                if invert is None:
-                    for obj, coll in transform.items():
-                        if coll == closestObj:
-                            invert = findFieldInstance(obj, 'InvertControls')
-                            break
-                    else:
-                        invert = findFieldInstance(self.entity, 'DefInvertControls')
-                ydiff, xdiff = thisObj.y-closest[1], thisObj.x-closest[0]
-                angle = collisions.direction(closest, thisObj)
-                tan = closestObj.tangent(closest, [-xdiff, -ydiff])
-                norm = tan-90
-                self.gravity = collisions.pointOnCircle(angle, -self.grav_amount)
-            
-            if self.gravType == 'Outwards':
-                norm += 180
-            
-            if invert:
-                norm += 180
+        cpoints = None
+        match self.gravType:
+            case 'Global':
+                self.gravity = collisions.pointOnCircle(math.radians(self.gravDir+90), self.grav_amount)
+                norm = self.gravDir
+            case 'Nearest':
+                cpoints = [(i.closestPointTo(thisObj), i) for e, i in transform.items() if 'Gravity' in e.identifier]
+            case 'NoGrav':
+                self.gravity = [0, 0]
+                norm = math.degrees(collisions.direction((0, 0), self.velocity))-90
+            case 'Inwards':
+                collObj = transform[specifier]
+                r = collObj.rect()
+                midp = ((r[2]-r[0])/2+r[0], (r[3]-r[1])/2+r[1])
+                cpoints = [(midp, collisions.Point(*midp))]
+            case 'Outwards':
+                collObj = transform[specifier]
+                cpoints = [(collObj.closestPointTo(thisObj), collObj)]
+        
+        if cpoints is not None:
+            cpoints.sort(key=lambda x: (thisObj.x-x[0][0])**2+(thisObj.y-x[0][1])**2)
+            closest = cpoints[0][0]
+            closestObj = cpoints[0][1]
+            if invert is None:
+                for obj, coll in transform.items():
+                    if coll == closestObj:
+                        invert = findFieldInstance(obj, 'InvertControls')
+                        break
+                else:
+                    invert = findFieldInstance(self.entity, 'DefInvertControls')
+            ydiff, xdiff = thisObj.y-closest[1], thisObj.x-closest[0]
+            angle = collisions.direction(closest, thisObj)
+            tan = closestObj.tangent(closest, [-xdiff, -ydiff])
+            norm = tan-90
+            self.gravity = collisions.pointOnCircle(angle, -self.grav_amount)
+        
+        if self.gravType == 'Outwards':
+            norm += 180
+        
+        if invert:
+            norm += 180
 
-            keys = pygame.key.get_pressed()
-            self.holding_jmp = keys[pygame.K_UP]
-            self.holding_any = keys[pygame.K_LEFT] or keys[pygame.K_RIGHT] or self.holding_jmp
-            jmp = any(e.type == pygame.KEYDOWN and e.key == pygame.K_UP for e in evs)
-            if keys[pygame.K_LEFT] ^ keys[pygame.K_RIGHT] or jmp:
-                offs = [(0, 0)]
-                if jmp:
-                    offs.append(collisions.rotateBy0((0, -self.jump), norm + (180 if invert else 0)))
-                if keys[pygame.K_LEFT]:
-                    offs.append(collisions.rotateBy0((-self.movement, 0), norm))
-                elif keys[pygame.K_RIGHT]:
-                    offs.append(collisions.rotateBy0((self.movement, 0), norm))
-                off = (sum(i[0] for i in offs), sum(i[1] for i in offs))
-                self.velocity = [self.velocity[0] + off[0],
-                                  self.velocity[1] + off[1]]
-        else:
-            self.gravity = [0, 0]
-            self.handle_keys()
+        keys = pygame.key.get_pressed()
+        self.holding_jmp = keys[pygame.K_UP]
+        self.holding_any = keys[pygame.K_LEFT] or keys[pygame.K_RIGHT] or self.holding_jmp
+        jmp = any(e.type == pygame.KEYDOWN and e.key == pygame.K_UP for e in evs)
+        if keys[pygame.K_LEFT] ^ keys[pygame.K_RIGHT] or jmp:
+            offs = [(0, 0)]
+            if jmp:
+                offs.append(collisions.rotateBy0((0, -self.jump), norm + (180 if invert else 0)))
+            if keys[pygame.K_LEFT]:
+                offs.append(collisions.rotateBy0((-self.movement, 0), norm))
+            elif keys[pygame.K_RIGHT]:
+                offs.append(collisions.rotateBy0((self.movement, 0), norm))
+            off = (sum(i[0] for i in offs), sum(i[1] for i in offs))
+            self.velocity = [self.velocity[0] + off[0],
+                                self.velocity[1] + off[1]]
         self.apply_physics()
         if debug.colliding:
             colls = self.Game.currentScene.collider()
@@ -248,6 +245,7 @@ class MainGameScene(Ss.BaseScene):
         self.lastCam = None
         self.gravChangeSpeed = 4 # TODO: When we have a player sprite, make the camera go slower than the player's spin animation
         self.CamDist = 4
+        self.lastTime = time.time()
         self.CamChangeSpeed = 0.1
         self.CamBounds = [None, None, None, None]
         es = self.currentLvl.GetEntitiesByUID(6) # The Player
@@ -319,6 +317,16 @@ class MainGameScene(Ss.BaseScene):
         # pygame.draw.line(sur, (125, 125, 125), playerPos, (playerPos[0]+vel[0]*10, playerPos[1]+vel[1]*10), 2)
         # grav = collisions.rotateBy0(player.gravity, -self.lastCam)
         # pygame.draw.line(sur, (125, 125, 125), playerPos, (playerPos[0]+grav[0]*100, playerPos[1]+grav[1]*100), 2)
+
+        # FPS
+        now = time.time()
+        delta_time = now - self.lastTime
+        self.lastTime = now
+        if debug.showFPS:
+            fps = 'N/A'
+            if delta_time > 0:
+                fps = round(1.0 / delta_time, 3)
+            sur.blit(pygame.font.Font(None, 30).render(f'FPS: {fps}', True, (255, 255, 255)), (0, 0))
 
         return sur
 
