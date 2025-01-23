@@ -75,6 +75,7 @@ def run(slf):
         Top = 0.5
         Bottom = -0.5
         Limit = True
+        Invert = False
 
         wraping = False
         segs = []
@@ -89,12 +90,14 @@ def run(slf):
                         Bottom = i['__value']
                     elif i['__identifier'] == 'limit':
                         Limit = i['__value']
+                    elif i['__identifier'] == 'Invert':
+                        Invert = i['__value']
             elif e.identifier == 'Segment':
                 segs.append(wrap.Segment(e.ScaledPos[0], e.fieldInstances[0]['__value']['cx']*e.gridSze+e.layerOffset[0]))
         if wraping:
             doneLvls += 1
             yield 'Wrapping', {'formatter': lambda *args: DEFAULT_FORMAT_FUNC(args[0]+f' for level {lvlObj.identifier} ({doneLvls}/{len(levels)})', *args[1:])}
-            i1, i2 = yield from wrap.wrapLevel(world, lvl, collisionFunc, Top, Bottom, Limit, 0, segs, [255, 255, 255, 10], True)
+            i1, i2 = yield from wrap.wrapLevel(world, lvl, collisionFunc, Top, Bottom, Limit, 0, segs, [255, 255, 255, 10], Invert, True)
             imgs[0].append(i1)
             imgs[1].append(i2)
 

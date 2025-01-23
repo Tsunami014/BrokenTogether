@@ -11,7 +11,7 @@
 	"iid": "a92c2e40-4ce0-11ef-a642-891c5b3dac07",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 156,
+	"nextUid": 157,
 	"identifierStyle": "Capitalize",
 	"toc": [{
 		"identifier": "WrapSettings",
@@ -4128,6 +4128,43 @@
 					"allowedRefsEntityUid": null,
 					"allowedRefTags": [],
 					"tilesetUid": null
+				},
+				{
+					"identifier": "Invert",
+					"doc": "Make down up and up down before wrapping",
+					"__type": "Bool",
+					"uid": 156,
+					"type": "F_Bool",
+					"isArray": false,
+					"canBeNull": false,
+					"arrayMinLength": null,
+					"arrayMaxLength": null,
+					"editorDisplayMode": "Hidden",
+					"editorDisplayScale": 1,
+					"editorDisplayPos": "Above",
+					"editorLinkStyle": "StraightArrow",
+					"editorDisplayColor": null,
+					"editorAlwaysShow": false,
+					"editorShowInWorld": true,
+					"editorCutLongValues": true,
+					"editorTextSuffix": null,
+					"editorTextPrefix": null,
+					"useForSmartColor": false,
+					"exportToToc": false,
+					"searchable": false,
+					"min": null,
+					"max": null,
+					"regex": null,
+					"acceptFileTypes": null,
+					"defaultOverride": null,
+					"textLanguageMode": null,
+					"symmetricalRef": false,
+					"autoChainRef": true,
+					"allowOutOfLevelRef": true,
+					"allowedRefs": "OnlySame",
+					"allowedRefsEntityUid": null,
+					"allowedRefTags": [],
+					"tilesetUid": null
 				}
 			]
 		},
@@ -4405,8 +4442,8 @@
 			"worldX": 0,
 			"worldY": 0,
 			"worldDepth": 0,
-			"pxWid": 1120,
-			"pxHei": 856,
+			"pxWid": 912,
+			"pxHei": 592,
 			"__bgColor": "#696A79",
 			"bgColor": null,
 			"useAutoIdentifier": true,
@@ -4415,15 +4452,15 @@
 			"bgPivotX": 0.5,
 			"bgPivotY": 0.5,
 			"__smartColor": "#ADADB5",
-			"__bgPos": { "topLeftPx": [0,0], "scale": [0.7925925925925926,0.7925925925925926], "cropRect": [253.45794392523362,0,1413.0841121495328,1080] },
+			"__bgPos": { "topLeftPx": [0,0], "scale": [0.5481481481481482,0.5481481481481482], "cropRect": [128.10810810810813,0,1663.7837837837837,1080] },
 			"externalRelPath": null,
 			"fieldInstances": [],
 			"layerInstances": [
 				{
 					"__identifier": "NonRenderEntities",
 					"__type": "Entities",
-					"__cWid": 70,
-					"__cHei": 54,
+					"__cWid": 57,
+					"__cHei": 37,
 					"__gridSize": 16,
 					"__opacity": 1,
 					"__pxTotalOffsetX": 0,
@@ -4461,13 +4498,13 @@
 									"params": ["Nearest"]
 								}] },
 								{ "__identifier": "DefGravityDir", "__type": "Float", "__value": 0, "__tile": null, "defUid": 122, "realEditorValues": [] },
-								{ "__identifier": "DefCamera", "__type": "LocalEnum.DefCamera", "__value": "AsIs", "__tile": null, "defUid": 130, "realEditorValues": [{
+								{ "__identifier": "DefCamera", "__type": "LocalEnum.DefCamera", "__value": "AroundClosest", "__tile": null, "defUid": 130, "realEditorValues": [{
 									"id": "V_String",
-									"params": ["AsIs"]
+									"params": ["AroundClosest"]
 								}] },
 								{ "__identifier": "DefCameraDir", "__type": "Float", "__value": 0, "__tile": null, "defUid": 124, "realEditorValues": [] },
 								{ "__identifier": "DefInvertControls", "__type": "Bool", "__value": false, "__tile": null, "defUid": 133, "realEditorValues": [] },
-								{ "__identifier": "DefCamDist", "__type": "Float", "__value": 2, "__tile": null, "defUid": 134, "realEditorValues": [{ "id": "V_Float", "params": [2] }] }
+								{ "__identifier": "DefCamDist", "__type": "Float", "__value": 3, "__tile": null, "defUid": 134, "realEditorValues": [{ "id": "V_Float", "params": [3] }] }
 							],
 							"__worldX": 304,
 							"__worldY": 256
@@ -4477,8 +4514,8 @@
 				{
 					"__identifier": "Fields",
 					"__type": "Entities",
-					"__cWid": 280,
-					"__cHei": 214,
+					"__cWid": 228,
+					"__cHei": 148,
 					"__gridSize": 4,
 					"__opacity": 1,
 					"__pxTotalOffsetX": 0,
@@ -4546,7 +4583,7 @@
 									"params": ["Global"]
 								}] },
 								{ "__identifier": "CameraDir", "__type": "Float", "__value": 118.987, "__tile": null, "defUid": 113, "realEditorValues": [{ "id": "V_Float", "params": [118.987] }] },
-								{ "__identifier": "CamDist", "__type": "Float", "__value": 1, "__tile": null, "defUid": 136, "realEditorValues": [{ "id": "V_Float", "params": [1] }] },
+								{ "__identifier": "CamDist", "__type": "Float", "__value": 3, "__tile": null, "defUid": 136, "realEditorValues": [{ "id": "V_Float", "params": [3] }] },
 								{ "__identifier": "InvertControls", "__type": "Bool", "__value": false, "__tile": null, "defUid": 131, "realEditorValues": [] }
 							],
 							"__worldX": 318,
@@ -4584,16 +4621,16 @@
 						},
 						{
 							"__identifier": "CircleGravity",
-							"__grid": [222,159],
+							"__grid": [161,73],
 							"__pivot": [0.5,0.5],
 							"__tags": ["Field"],
 							"__tile": null,
 							"__smartColor": "#D77643",
 							"iid": "c2f51240-c210-11ef-9806-eddb43f27885",
-							"width": 400,
-							"height": 400,
+							"width": 404,
+							"height": 404,
 							"defUid": 5,
-							"px": [890,638],
+							"px": [646,294],
 							"fieldInstances": [
 								{ "__identifier": "Layer", "__type": "Float", "__value": 0, "__tile": null, "defUid": 119, "realEditorValues": [] },
 								{ "__identifier": "GravityType", "__type": "LocalEnum.GravityType", "__value": "Inwards", "__tile": null, "defUid": 116, "realEditorValues": [] },
@@ -4603,39 +4640,16 @@
 								{ "__identifier": "CamDist", "__type": "Float", "__value": null, "__tile": null, "defUid": 136, "realEditorValues": [] },
 								{ "__identifier": "InvertControls", "__type": "Bool", "__value": false, "__tile": null, "defUid": 131, "realEditorValues": [] }
 							],
-							"__worldX": 890,
-							"__worldY": 638
-						},
-						{
-							"__identifier": "CircleZone",
-							"__grid": [58,69],
-							"__pivot": [0.5,0.5],
-							"__tags": ["Field"],
-							"__tile": null,
-							"__smartColor": "#63C74D",
-							"iid": "8c9f3350-c210-11ef-9806-bfac4028796a",
-							"width": 584,
-							"height": 584,
-							"defUid": 146,
-							"px": [234,278],
-							"fieldInstances": [
-								{ "__identifier": "Layer", "__type": "Float", "__value": -1, "__tile": null, "defUid": 147, "realEditorValues": [{ "id": "V_Float", "params": [-1] }] },
-								{ "__identifier": "GravityType", "__type": "LocalEnum.DefGravityType", "__value": null, "__tile": null, "defUid": 148, "realEditorValues": [] },
-								{ "__identifier": "GravityDir", "__type": "Float", "__value": null, "__tile": null, "defUid": 149, "realEditorValues": [] },
-								{ "__identifier": "Camera", "__type": "LocalEnum.DefCamera", "__value": null, "__tile": null, "defUid": 150, "realEditorValues": [] },
-								{ "__identifier": "CameraDir", "__type": "Float", "__value": null, "__tile": null, "defUid": 151, "realEditorValues": [] },
-								{ "__identifier": "CamDist", "__type": "Float", "__value": 4, "__tile": null, "defUid": 152, "realEditorValues": [{ "id": "V_Float", "params": [4] }] }
-							],
-							"__worldX": 234,
-							"__worldY": 278
+							"__worldX": 646,
+							"__worldY": 294
 						}
 					]
 				},
 				{
 					"__identifier": "Entities",
 					"__type": "Entities",
-					"__cWid": 140,
-					"__cHei": 107,
+					"__cWid": 114,
+					"__cHei": 74,
 					"__gridSize": 8,
 					"__opacity": 0.8,
 					"__pxTotalOffsetX": 0,
@@ -4659,8 +4673,8 @@
 				{
 					"__identifier": "DecorFront",
 					"__type": "Tiles",
-					"__cWid": 140,
-					"__cHei": 107,
+					"__cWid": 114,
+					"__cHei": 74,
 					"__gridSize": 8,
 					"__opacity": 1,
 					"__pxTotalOffsetX": 0,
@@ -4684,8 +4698,8 @@
 				{
 					"__identifier": "TopDownAuto",
 					"__type": "IntGrid",
-					"__cWid": 35,
-					"__cHei": 27,
+					"__cWid": 29,
+					"__cHei": 19,
 					"__gridSize": 32,
 					"__opacity": 1,
 					"__pxTotalOffsetX": 0,
@@ -4715,19 +4729,7 @@
 						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-						
+						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 					],
 					"autoLayerTiles": [],
 					"seed": 3633205,
@@ -4738,8 +4740,8 @@
 				{
 					"__identifier": "TopDownTiles",
 					"__type": "Tiles",
-					"__cWid": 35,
-					"__cHei": 27,
+					"__cWid": 29,
+					"__cHei": 19,
 					"__gridSize": 32,
 					"__opacity": 1,
 					"__pxTotalOffsetX": 0,
@@ -4763,8 +4765,8 @@
 				{
 					"__identifier": "DualGrid",
 					"__type": "AutoLayer",
-					"__cWid": 35,
-					"__cHei": 27,
+					"__cWid": 29,
+					"__cHei": 19,
 					"__gridSize": 32,
 					"__opacity": 1,
 					"__pxTotalOffsetX": 16,
@@ -4788,8 +4790,8 @@
 				{
 					"__identifier": "SideOnTiles",
 					"__type": "Tiles",
-					"__cWid": 35,
-					"__cHei": 27,
+					"__cWid": 29,
+					"__cHei": 19,
 					"__gridSize": 32,
 					"__opacity": 1,
 					"__pxTotalOffsetX": 0,
@@ -4813,8 +4815,8 @@
 				{
 					"__identifier": "Planets",
 					"__type": "Tiles",
-					"__cWid": 140,
-					"__cHei": 107,
+					"__cWid": 114,
+					"__cHei": 74,
 					"__gridSize": 8,
 					"__opacity": 1,
 					"__pxTotalOffsetX": 0,
@@ -4833,22 +4835,22 @@
 					"seed": 9274051,
 					"overrideTilesetUid": null,
 					"gridTiles": [
-						{ "px": [72,96], "src": [0,512], "f": 0, "t": 4, "d": [1689], "a": 1 },
-						{ "px": [328,96], "src": [256,512], "f": 0, "t": 5, "d": [1721], "a": 1 },
-						{ "px": [72,352], "src": [0,768], "f": 0, "t": 6, "d": [6169], "a": 1 },
-						{ "px": [328,352], "src": [256,768], "f": 0, "t": 7, "d": [6201], "a": 1 },
-						{ "px": [696,440], "src": [0,0], "f": 0, "t": 0, "d": [7787], "a": 1 },
-						{ "px": [952,440], "src": [256,0], "f": 0, "t": 1, "d": [7819], "a": 1 },
-						{ "px": [696,696], "src": [0,256], "f": 0, "t": 2, "d": [12267], "a": 1 },
-						{ "px": [952,696], "src": [256,256], "f": 0, "t": 3, "d": [12299], "a": 1 }
+						{ "px": [72,96], "src": [0,512], "f": 0, "t": 4, "d": [1377], "a": 1 },
+						{ "px": [328,96], "src": [256,512], "f": 0, "t": 5, "d": [1409], "a": 1 },
+						{ "px": [448,96], "src": [0,0], "f": 0, "t": 0, "d": [1424], "a": 1 },
+						{ "px": [704,96], "src": [256,0], "f": 0, "t": 1, "d": [1456], "a": 1 },
+						{ "px": [72,352], "src": [0,768], "f": 0, "t": 6, "d": [5025], "a": 1 },
+						{ "px": [328,352], "src": [256,768], "f": 0, "t": 7, "d": [5057], "a": 1 },
+						{ "px": [448,352], "src": [0,256], "f": 0, "t": 2, "d": [5072], "a": 1 },
+						{ "px": [704,352], "src": [256,256], "f": 0, "t": 3, "d": [5104], "a": 1 }
 					],
 					"entityInstances": []
 				},
 				{
 					"__identifier": "SideOnBehindTiles",
 					"__type": "Tiles",
-					"__cWid": 35,
-					"__cHei": 27,
+					"__cWid": 29,
+					"__cHei": 19,
 					"__gridSize": 32,
 					"__opacity": 1,
 					"__pxTotalOffsetX": 0,
@@ -4872,8 +4874,8 @@
 				{
 					"__identifier": "DecorBack",
 					"__type": "Tiles",
-					"__cWid": 140,
-					"__cHei": 107,
+					"__cWid": 114,
+					"__cHei": 74,
 					"__gridSize": 8,
 					"__opacity": 1,
 					"__pxTotalOffsetX": 0,
@@ -4957,7 +4959,8 @@
 							"fieldInstances": [
 								{ "__identifier": "top", "__type": "Float", "__value": 0.5, "__tile": null, "defUid": 100, "realEditorValues": [] },
 								{ "__identifier": "bottom", "__type": "Float", "__value": -0.5, "__tile": null, "defUid": 101, "realEditorValues": [] },
-								{ "__identifier": "limit", "__type": "Bool", "__value": true, "__tile": null, "defUid": 102, "realEditorValues": [] }
+								{ "__identifier": "limit", "__type": "Bool", "__value": true, "__tile": null, "defUid": 102, "realEditorValues": [] },
+								{ "__identifier": "Invert", "__type": "Bool", "__value": false, "__tile": null, "defUid": 156, "realEditorValues": [] }
 							],
 							"__worldX": 0,
 							"__worldY": -256
@@ -5043,9 +5046,9 @@
 				{
 					"__identifier": "Fields",
 					"__type": "Entities",
-					"__cWid": 52,
-					"__cHei": 32,
-					"__gridSize": 8,
+					"__cWid": 104,
+					"__cHei": 64,
+					"__gridSize": 4,
 					"__opacity": 1,
 					"__pxTotalOffsetX": 0,
 					"__pxTotalOffsetY": 0,
@@ -5449,7 +5452,8 @@
 							"fieldInstances": [
 								{ "__identifier": "top", "__type": "Float", "__value": 0.5, "__tile": null, "defUid": 100, "realEditorValues": [] },
 								{ "__identifier": "bottom", "__type": "Float", "__value": -0.5, "__tile": null, "defUid": 101, "realEditorValues": [] },
-								{ "__identifier": "limit", "__type": "Bool", "__value": true, "__tile": null, "defUid": 102, "realEditorValues": [] }
+								{ "__identifier": "limit", "__type": "Bool", "__value": true, "__tile": null, "defUid": 102, "realEditorValues": [] },
+								{ "__identifier": "Invert", "__type": "Bool", "__value": false, "__tile": null, "defUid": 156, "realEditorValues": [] }
 							],
 							"__worldX": 416,
 							"__worldY": -224
@@ -5497,9 +5501,9 @@
 				{
 					"__identifier": "Fields",
 					"__type": "Entities",
-					"__cWid": 52,
-					"__cHei": 28,
-					"__gridSize": 8,
+					"__cWid": 104,
+					"__cHei": 56,
+					"__gridSize": 4,
 					"__opacity": 1,
 					"__pxTotalOffsetX": 0,
 					"__pxTotalOffsetY": 0,
