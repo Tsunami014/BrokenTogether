@@ -96,15 +96,15 @@ class BaseEntity(Ss.BaseEntity):
         super().__init__(Game, entity)
         # Each value is in units per frame unless specified
         self.max_speed = 50  # Max speed
-        self.friction = 0.03  # Friction (applied each frame) (in percent of current speed)
+        self.friction = 0.06  # Friction (applied each frame) (in percent of current speed)
         self.not_hold_fric = 0.1 # ADDED friction to apply when not holding ANY KEY (you can modify this to be only left-right or whatever) (in percent of current speed)
-        self.not_hold_grav = [0.6, 0.6] # Decrease in gravity to apply when not holding THE UP KEY (in percent of current gravity strength)
+        self.not_hold_grav = [0.45, 0.45] # Decrease in gravity to apply when not holding THE UP KEY (in percent of current gravity strength)
 
         self.movement = 0.5 # How much you move left/right each frame
-        self.jump = 10 # Change in velocity when jumping
-        self.grav_amount = 0.7 # Gravity strength
+        self.jump = 18 # Change in velocity when jumping
+        self.grav_amount = 0.8 # Gravity strength
 
-        self.hitSize = 2 # Radius of circle hitbox
+        self.hitSize = 3 # Radius of circle hitbox
 
         self.gravType = None
         self.gravDir = None
@@ -311,7 +311,7 @@ class MainGameScene(Ss.BaseScene):
         pygame.draw.circle(playerSur, (255, 255, 255), (sze/2, sze/2), 7, 2)
         playerSur = pygame.transform.rotozoom(playerSur, -self.lastCam%45+22.5, 1) # smooth
         # playerSur = pygame.transform.rotate(playerSur, -self.lastGrav) # pixelated
-        sur.blit(playerSur, (playerPos[0]-sze/2, playerPos[1]-sze/2))
+        sur.blit(playerSur, (playerPos[0]-playerSur.get_width()/2, playerPos[1]-playerSur.get_height()/2))
 
         # Debugging scripts
         # sur.blit(pygame.font.Font(None, 30).render(str(playerPos), True, (255, 255, 255)), (0, 0))
