@@ -13,7 +13,7 @@ G = Game()
 G.set_caption('Broken Together')
 
 def load_level(lvl):
-    pth = f"./assets/levels/{lvl}/main.ldtk"
+    pth = f"./assets/maps/{lvl}/main.ldtk"
     if not os.path.exists(pth):
         G.UILayer.append(GUI.Toast(G, 'Map does not exist! Use `/maps` to see all the maps', GO.CRED))
         return
@@ -21,8 +21,8 @@ def load_level(lvl):
     if G.currentScene is not None:
         G.load_scene(MainGameScene)
 
-def find_levels():
-    return [i for i in os.listdir('./assets/levels') if os.path.isdir(f'./assets/levels/{i}')]
+def find_maps():
+    return [i for i in os.listdir('./assets/maps') if os.path.isdir(f'./assets/maps/{i}')]
 
 load_level('level1')
 
@@ -48,7 +48,7 @@ class MapScreen(Screen):
             self.Abort()
         btns = [
             GUI.Button(g, g.LP, next(rainbow), i, func=lambda lvl=i: func(lvl))
-            for i in find_levels()
+            for i in find_maps()
         ]
         cols = math.ceil(math.sqrt(len(btns)))
         g.grid = [

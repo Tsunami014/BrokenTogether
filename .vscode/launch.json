@@ -28,7 +28,7 @@
             "args": ["run_sync"],
             "console": "integratedTerminal",
             "justMyCode": false,
-            "cwd": "${workspaceFolder}/assets/levels/${input:folderName}"
+            "cwd": "${workspaceFolder}/assets/maps/${input:folderName}"
         }
     ],
     "inputs": [
