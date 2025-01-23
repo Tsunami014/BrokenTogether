@@ -12,7 +12,7 @@ import pygame
 G = Game()
 G.set_caption('Broken Together')
 
-def load_level(lvl):
+def load_level(lvl, *args):
     pth = f"./assets/maps/{lvl}/main.ldtk"
     if not os.path.exists(pth):
         G.UILayer.append(GUI.Toast(G, 'Map does not exist! Use `/maps` to see all the maps', GO.CRED))
@@ -30,6 +30,9 @@ class MapScreen(Screen):
     def __init__(self, Game):
         super().__init__()
         self.Game = Game
+    
+    def __call__(self, *args):
+        return super().__call__()
     
     def _LoadUI(self):
         self.layers[0].add('Main')
@@ -62,21 +65,21 @@ class DebugCommands:
         self.showingColls = False
         self.colliding = True
         self.globalMove = False
-        self.Game.AddCommand('colls', 'Toggle collision debug', self.toggleColls)
-        self.Game.AddCommand('ignore', 'Toggle collision ignore', self.toggleIgnore)
-        self.Game.AddCommand('global', 'Toggle global movement', self.toggleGlobal)
-        self.Game.AddCommand('load', 'Load a specific map', load_level)
-        self.Game.AddCommand('map', 'Show all the maps', MapScreen(Game))
+        self.Game.AddCommand('colls', '/colls ... : Toggle collision debug', self.toggleColls)
+        self.Game.AddCommand('ignore', '/ignore ... : Toggle collision ignore', self.toggleIgnore)
+        self.Game.AddCommand('global', '/global ... : Toggle global movement', self.toggleGlobal)
+        self.Game.AddCommand('load', '/load <name-str> ... : Load a specific map', load_level)
+        self.Game.AddCommand('map', '/map ... : Show all the maps', MapScreen(Game))
     
-    def toggleColls(self):
+    def toggleColls(self, *args):
         self.showingColls = not self.showingColls
         G.UILayer.append(GUI.Toast(G, ('Showing' if self.showingColls else 'Not showing') + ' collisions'))
     
-    def toggleIgnore(self):
+    def toggleIgnore(self, *args):
         self.colliding = not self.colliding
         G.UILayer.append(GUI.Toast(G, ('Applying' if self.colliding else 'Ignoring') + ' collisions'))
     
-    def toggleGlobal(self):
+    def toggleGlobal(self, *args):
         self.globalMove = not self.globalMove
         G.UILayer.append(GUI.Toast(G, 'Moving '+('globally' if self.globalMove else 'planet-based')))
 
