@@ -13,6 +13,9 @@ import pygame
 G = Game()
 G.set_caption('Broken Together')
 
+# Must be *after* we load the pygame window
+from loadWorld import collisionFuncColl  # noqa: E402
+
 def load_level(lvl, *args):
     pth = f"./assets/maps/{lvl}/main.ldtk"
     if not os.path.exists(pth):
@@ -279,14 +282,23 @@ class MainGameScene(Ss.BaseScene):
                     d = lay.tileset.data.copy()
                     d.update({'relPath': d['relPath'] + '/../colls.png'})
                     tmpl.tileset = ldtk.Tileset(lay.tileset.fileLoc, d)
-                for t in tmpl.tiles:
-                    poly = approximate_polygon(t.getImg())
-                    if poly is None:
-                        continue
-                    colls.append(collisions.ShapeCombiner.pointsToShape(*[(i[0]+t.pos[0], i[1]+t.pos[1]) for i in poly.toPoints()]))
+                    for t in tmpl.tiles:
+                        poly = approximate_polygon(t.getImg())
+                        if poly is None:
+                            continue
+                        colls.append(collisions.ShapeCombiner.pointsToShape(*[(i[0]+t.pos[0], i[1]+t.pos[1]) for i in poly.toPoints()]))
+                else:
+                    for t in tmpl.tiles:
+                        poly = collisionFuncColl(tmpl.tileset, *t.src).copy()
+                        if collisions.checkShpType(poly, collisions.ShpTyps.NoShape):
+                            continue
+                        poly.x += t.pos[0]
+                        poly.y += t.pos[1]
+                        colls.append(poly)
             elif lay.type == 'IntGrid':
-                colls.extend(collisions.ShapeCombiner.combineRects(*lay.intgrid.getRects(lay.intgrid.allValues[1:])))
-        self._collider = collisions.Shapes(*colls)#, *self.Game.currentLvL.GetAllEntities(CollProcessor))
+                colls.extend(lay.intgrid.getRects(lay.intgrid.allValues[1:]))
+        # self.Game.currentLvL.GetAllEntities(CollProcessor)
+        self._collider = collisions.ShapeCombiner.combineRects(*colls)
         return self._collider
 
     def postProcessGlobal(self, sur):
