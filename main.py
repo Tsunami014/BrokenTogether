@@ -110,6 +110,10 @@ class BaseEntity(Ss.BaseEntity):
 
         self.hitSize = 3 # Radius of circle hitbox
 
+        self.grav_str = 1
+        self.grav_change = 0.08
+
+        self.grav_adjust = None
         self.gravType = None
         self.gravDir = None
         self.camType = None
@@ -132,6 +136,7 @@ class BaseEntity(Ss.BaseEntity):
         self.camType = None
         self.camDir = None
         self.camDist = None
+        self.grav_adjust = None
         invert = None
 
         specifier = None
@@ -151,6 +156,8 @@ class BaseEntity(Ss.BaseEntity):
                 self.camDir = findFieldInstance(g, 'CameraDir')
             if self.camDist is None:
                 self.camDist = findFieldInstance(g, 'CamDist')
+            if self.grav_adjust is None:
+                self.grav_adjust = findFieldInstance(g, 'GravityStr')
             if invert is None:
                 invert = findFieldInstance(g, 'InvertControls')
         
@@ -164,13 +171,17 @@ class BaseEntity(Ss.BaseEntity):
             self.camDir = findFieldInstance(self.entity, 'DefCameraDir')
         if self.camDist is None:
             self.camDist = findFieldInstance(self.entity, 'DefCamDist')
+        if self.grav_adjust is None:
+            self.grav_adjust = findFieldInstance(self.entity, 'DefGravityStr')
         if invert is None and self.gravType != 'Nearest':
             invert = findFieldInstance(self.entity, 'DefInvertControls')
+        
+        self.grav_str = min(max(self.grav_adjust, self.grav_str-self.grav_change), self.grav_str+self.grav_change)
 
         cpoints = None
         match self.gravType:
             case 'Global':
-                self.gravity = collisions.pointOnCircle(math.radians(self.gravDir+90), self.grav_amount)
+                self.gravity = collisions.pointOnCircle(math.radians(self.gravDir+90), self.grav_amount*self.grav_str)
                 norm = self.gravDir
             case 'Nearest':
                 cpoints = [(i.closestPointTo(thisObj), i) for e, i in transform.items() if 'Gravity' in e.identifier]
@@ -201,7 +212,7 @@ class BaseEntity(Ss.BaseEntity):
             angle = collisions.direction(closest, thisObj)
             tan = closestObj.tangent(closest, [-xdiff, -ydiff])
             norm = tan-90
-            self.gravity = collisions.pointOnCircle(angle, -self.grav_amount)
+            self.gravity = collisions.pointOnCircle(angle, -self.grav_amount*self.grav_str)
         
         if self.gravType == 'Outwards':
             norm += 180
