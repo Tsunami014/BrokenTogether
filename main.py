@@ -1,6 +1,5 @@
 import math
 import os
-import time
 from BlazeSudio import ldtk, collisions
 from BlazeSudio.Game import Game
 from BlazeSudio.graphics import Screen, GUI, options as GO
@@ -98,17 +97,17 @@ def CollProcessor(e):
 class BaseEntity(Ss.BaseEntity):
     def __init__(self, Game, entity):
         super().__init__(Game, entity)
-        # Each value is in units per frame unless specified
-        self.max_speed = 30  # Max speed
+        # Each value is in units per second unless specified
+        self.max_speed = 20  # Max speed
         self.max_grav_speed = 9 # Max speed the gravity can get you
-        self.friction = 0.08  # Friction perpendicular to or if no grav (applied each frame) (in percent of current speed)
-        self.grav_fric = 0.04 # Friction applied in gravity direction (each frame) (in percent of current gravity strength)
-        self.not_hold_fric = 0.1 # ADDED friction to apply when not holding ANY KEY (you can modify this to be only left-right or whatever) (in percent of current speed)
-        self.not_hold_grav = [0.3, 0.3] # Decrease in gravity to apply when not holding THE UP KEY (in percent of current gravity strength)
+        self.friction = 3.0  # Friction perpendicular to or if no grav (applied each frame) (in percent of current speed)
+        self.grav_fric = 0.5 # Friction applied in gravity direction (each frame) (in percent of current gravity strength)
+        self.not_hold_fric = 1.0 # ADDED friction to apply when not holding ANY KEY (you can modify this to be only left-right or whatever) (in percent of current speed)
+        self.not_hold_grav = [0.1, 0.1] # Decrease in gravity to apply when holding THE UP KEY (in percent of current gravity strength)
 
-        self.movement = 0.5 # How much you move left/right each frame
-        self.jump = 20 # Change in velocity when jumping
-        self.grav_amount = 0.9 # Gravity strength
+        self.movement = 0.6 # How much you move left/right each frame
+        self.jump = 16 # Change in velocity when jumping
+        self.grav_amount = 10.0 # Gravity strength
 
         self.hitSize = 3 # Radius of circle hitbox
 
@@ -226,9 +225,18 @@ class BaseEntity(Ss.BaseEntity):
         self.holding_jmp = keys[pygame.K_UP]
         self.holding_any = keys[pygame.K_LEFT] or keys[pygame.K_RIGHT] or self.holding_jmp
         jmp = any(e.type == pygame.KEYDOWN and e.key == pygame.K_UP for e in evs)
-        if keys[pygame.K_LEFT] ^ keys[pygame.K_RIGHT] or jmp:
+        spin = any(e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE for e in evs)
+        if keys[pygame.K_LEFT] ^ keys[pygame.K_RIGHT] or jmp or spin:
             offs = [(0, 0)]
             if jmp:
+                offs.append(collisions.rotateBy0((0, -self.jump), norm + (180 if invert else 0)))
+            if spin:
+                gx, gy = self.gravity
+                mag2 = gx * gx + gy * gy
+                if mag2 != 0:
+                    dot = self.velocity[0] * gx + self.velocity[1] * gy
+                    self.velocity[0] -= (dot / mag2) * gx
+                    self.velocity[1] -= (dot / mag2) * gy
                 offs.append(collisions.rotateBy0((0, -self.jump), norm + (180 if invert else 0)))
             if keys[pygame.K_LEFT]:
                 offs.append(collisions.rotateBy0((-self.movement, 0), norm))
@@ -261,7 +269,6 @@ class MainGameScene(Ss.BaseScene):
         self.lastCam = None
         self.gravChangeSpeed = 4 # TODO: When we have a player sprite, make the camera go slower than the player's spin animation
         self.CamDist = 4
-        self.lastTime = time.time()
         self.CamChangeSpeed = 0.1
         self.CamBounds = [None, None, None, None]
         es = self.currentLvl.GetEntitiesByUID(6) # The Player
@@ -344,14 +351,8 @@ class MainGameScene(Ss.BaseScene):
         # pygame.draw.line(sur, (125, 125, 125), playerPos, (playerPos[0]+grav[0]*100, playerPos[1]+grav[1]*100), 2)
 
         # FPS
-        now = time.time()
-        delta_time = now - self.lastTime
-        self.lastTime = now
         if debug.showFPS:
-            fps = 'N/A'
-            if delta_time > 0:
-                fps = round(1.0 / delta_time, 3)
-            sur.blit(pygame.font.Font(None, 30).render(f'FPS: {fps}', True, (255, 255, 255)), (0, 0))
+            sur.blit(pygame.font.Font(None, 30).render(f'FPS: {round(self.Game.clock.get_fps(), 3)}', True, (255, 255, 255)), (0, 0))
 
         return sur
 
