@@ -283,11 +283,26 @@ class MainGameScene(Ss.BaseScene):
     
     @property
     def CamPos(self):
-        playerPos = self.entities[0].scaled_pos
-        return (
-            round(playerPos[0]-self.off[0]),
-            round(playerPos[1]-self.off[1])
-        )
+        return self.off
+
+    def getCloseRect(self):
+        player = self.entities[0]
+        screenSize = self.Game.size
+        diag = math.hypot(*screenSize)/self.CamDist
+        radius = max(diag/2, player.max_speed) + 20
+        ppos = player.scaled_pos
+        return pygame.Rect(ppos[0]-radius, ppos[1]-radius, radius*2, radius*2)
+    
+    def getScreenRect(self):
+        player = self.entities[0]
+        screenSize = self.Game.size
+        diag = math.hypot(*screenSize)/self.CamDist
+        radius = max(diag/2, player.max_speed) + 20
+        ppos = player.scaled_pos
+        return pygame.Rect(ppos[0]-radius, ppos[1]-radius, radius*2, radius*2)
+
+    # def getClose(self, li, type):
+    #     rect = self.getCloseRect()
     
     def collider(self):
         if self._collider is not None:
@@ -322,14 +337,14 @@ class MainGameScene(Ss.BaseScene):
         return self._collider
 
     def postProcessGlobal(self, sur):
-        return self._Rotate(sur.copy())
+        return self._Rotate(sur)
     
     def postProcessScreen(self, sur):
-        player = self.entities[0]
-        camPos = self.CamPos
+        screenCentre = self.getScreenRect().center
+        playerCentre = self.getCloseRect().center
         diff = (
-            camPos[0] - round(player.scaled_pos[0]-self.off[0]),
-            camPos[1] - round(player.scaled_pos[1]-self.off[1])
+            screenCentre[0] - playerCentre[0],
+            screenCentre[1] - playerCentre[1]
         )
         centre = (self.Game.size[0]/2, self.Game.size[1]/2)
         # Basically, where it is (which may change later) - where it should be (in the centre)
@@ -405,16 +420,23 @@ class MainGameScene(Ss.BaseScene):
                     self.lastCam = camang
             self.lastCam %= 360
     
-        rotated_sur = pygame.transform.rotozoom(sur, self.lastCam, 1)
-        old_center = sur.get_rect().center
-        rotated_rect = rotated_sur.get_rect()
-    
-        playerPos = self.entities[0].scaled_pos
-        newPos = collisions.rotate(old_center, playerPos, -self.lastCam)
-        diff = (newPos[0] - playerPos[0], newPos[1] - playerPos[1])
-        rotated_rect.center = (old_center[0] - diff[0], old_center[1] - diff[1])
-        self.off = rotated_rect.topleft
-    
+        rect = self.getCloseRect()
+        def constrain(val, sze):
+            return min(max(val, 0), sze)
+        w, h = rect.size
+        x, y = constrain(rect.left, w), constrain(rect.top, h)
+        endx, endy = constrain(x+rect.width, sur.get_width()), constrain(y+rect.height, sur.get_height())
+        rect2 = pygame.Rect(x, y, endx-x, endy-y)
+        cutout = sur.subsurface(rect2)
+        new_sur = pygame.Surface((w, h), pygame.SRCALPHA)
+        new_sur.blit(cutout, (x-rect.x, y-rect.y))
+        rotated_sur = pygame.transform.rotozoom(new_sur, self.lastCam, 1)
+        sze = rotated_sur.get_size()
+        self.off = (
+            sze[0]/2,
+            sze[1]/2,
+        )
+
         return rotated_sur
 
     def render(self):
