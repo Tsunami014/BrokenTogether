@@ -98,16 +98,17 @@ class BaseEntity(Ss.BaseEntity):
     def __init__(self, Game, entity):
         super().__init__(Game, entity)
         # Each value is in units per second unless specified
-        self.max_speed = 20  # Max speed
-        self.max_grav_speed = 9 # Max speed the gravity can get you
-        self.friction = 3.0  # Friction perpendicular to or if no grav (applied each frame) (in percent of current speed)
-        self.grav_fric = 0.5 # Friction applied in gravity direction (each frame) (in percent of current gravity strength)
-        self.not_hold_fric = 1.0 # ADDED friction to apply when not holding ANY KEY (you can modify this to be only left-right or whatever) (in percent of current speed)
-        self.not_hold_grav = [0.1, 0.1] # Decrease in gravity to apply when holding THE UP KEY (in percent of current gravity strength)
+        self.max_speed = 15  # Max speed
+        self.max_grav_speed = 15 # Max speed the gravity can get you
+        self.friction = 1.0  # Friction perpendicular to or if no grav (applied each frame) (in percent of current speed)
+        self.grav_fric = 0.7 # Friction applied in gravity direction (each frame) (in percent of current gravity strength)
+        self.not_hold_fric = 0.7 # ADDED friction to apply when not holding ANY KEY (you can modify this to be only left-right or whatever) (in percent of current speed)
+        self.not_hold_grav = [0.2, 0.2] # Decrease in gravity to apply when holding THE UP KEY (in percent of current gravity strength)
 
         self.movement = 0.6 # How much you move left/right each frame
-        self.jump = 16 # Change in velocity when jumping
-        self.grav_amount = 10.0 # Gravity strength
+        self.movement_decrease = 0.15 # How much to decrease the speed of horizontal movement by (in % current speed)
+        self.jump = 9 # Change in velocity when jumping
+        self.grav_amount = 15.0 # Gravity strength
 
         self.hitSize = 3 # Radius of circle hitbox
 
@@ -238,10 +239,15 @@ class BaseEntity(Ss.BaseEntity):
                     self.velocity[0] -= (dot / mag2) * gx
                     self.velocity[1] -= (dot / mag2) * gy
                 offs.append(collisions.rotateBy0((0, -self.jump), norm + (180 if invert else 0)))
-            if keys[pygame.K_LEFT]:
-                offs.append(collisions.rotateBy0((-self.movement, 0), norm))
-            elif keys[pygame.K_RIGHT]:
-                offs.append(collisions.rotateBy0((self.movement, 0), norm))
+            if keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]:
+                velAmnt = math.hypot(*self.velocity)
+                decrease = self.movement_decrease * velAmnt
+                mvement = max(self.movement - decrease, 0)
+                if mvement > 0:
+                    if keys[pygame.K_LEFT]:
+                        offs.append(collisions.rotateBy0((-mvement, 0), norm))
+                    else:
+                        offs.append(collisions.rotateBy0((mvement, 0), norm))
             off = (sum(i[0] for i in offs), sum(i[1] for i in offs))
             self.velocity = [self.velocity[0] + off[0],
                                 self.velocity[1] + off[1]]
@@ -267,7 +273,6 @@ class MainGameScene(Ss.BaseScene):
         self._collider = None
         self.off = [0, 0]
         self.lastCam = None
-        self.gravChangeSpeed = 4 # TODO: When we have a player sprite, make the camera go slower than the player's spin animation
         self.CamDist = 4
         self.CamChangeSpeed = 0.1
         self.CamBounds = [None, None, None, None]
@@ -297,7 +302,7 @@ class MainGameScene(Ss.BaseScene):
         player = self.entities[0]
         screenSize = self.Game.size
         diag = math.hypot(*screenSize)/self.CamDist
-        radius = max(diag/2, player.max_speed) + 20
+        radius = diag/2 + 10
         ppos = player.scaled_pos
         return pygame.Rect(ppos[0]-radius, ppos[1]-radius, radius*2, radius*2)
 
@@ -359,7 +364,7 @@ class MainGameScene(Ss.BaseScene):
         sur.blit(playerSur, (playerPos[0]-playerSur.get_width()/2, playerPos[1]-playerSur.get_height()/2))
 
         # Debugging scripts
-        # sur.blit(pygame.font.Font(None, 30).render(str(playerSur.get_size()), True, (255, 255, 255)), (0, 0))
+        # sur.blit(pygame.font.Font(None, 30).render(str(self.Game.deltaTime), True, (255, 255, 255)), (0, 30))
         # vel = collisions.rotateBy0(player.velocity, -self.lastGrav)
         # pygame.draw.line(sur, (125, 125, 125), playerPos, (playerPos[0]+vel[0]*10, playerPos[1]+vel[1]*10), 2)
         # grav = collisions.rotateBy0(player.gravity, -self.lastCam)
@@ -410,14 +415,8 @@ class MainGameScene(Ss.BaseScene):
         else:
             angOpts = [camang, camang - 360, camang + 360]
             camang = min(angOpts, key=lambda x: abs(x - self.lastCam))
-            if self.lastCam > camang:
-                self.lastCam -= self.gravChangeSpeed
-                if self.lastCam < camang:
-                    self.lastCam = camang
-            elif self.lastCam < camang:
-                self.lastCam += self.gravChangeSpeed
-                if self.lastCam > camang:
-                    self.lastCam = camang
+            # TODO: When we have a player sprite, make the camera spin *after* the player's spin animation
+            self.lastCam = (self.lastCam-camang)*(14/15)+camang
             self.lastCam %= 360
     
         rect = self.getCloseRect()
