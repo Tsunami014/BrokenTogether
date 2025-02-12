@@ -110,11 +110,14 @@ class BaseEntity(Ss.BaseEntity):
         self.jump = 9 # Change in velocity when jumping
         self.grav_amount = 15.0 # Gravity strength
 
-        self.hitSize = 3 # Radius of circle hitbox
+        self.hitSize = 32 # Radius of circle hitbox
 
         self.grav_str = 1
         self.grav_change = 0.08
 
+        self.upforce = 0.05
+
+        # Values set via the fields
         self.grav_adjust = None
         self.gravType = None
         self.gravDir = None
@@ -245,9 +248,9 @@ class BaseEntity(Ss.BaseEntity):
                 mvement = max(self.movement - decrease, 0)
                 if mvement > 0:
                     if keys[pygame.K_LEFT]:
-                        offs.append(collisions.rotateBy0((-mvement, 0), norm))
+                        offs.append(collisions.rotateBy0((-mvement, -self.upforce), norm))
                     else:
-                        offs.append(collisions.rotateBy0((mvement, 0), norm))
+                        offs.append(collisions.rotateBy0((mvement, -self.upforce), norm))
             off = (sum(i[0] for i in offs), sum(i[1] for i in offs))
             self.velocity = [self.velocity[0] + off[0],
                                 self.velocity[1] + off[1]]
@@ -355,7 +358,7 @@ class MainGameScene(Ss.BaseScene):
         # Basically, where it is (which may change later) - where it should be (in the centre)
         playerPos = ((centre[0]-diff[0])/self.CamDist, (centre[1]-diff[1])/self.CamDist)
 
-        sze = 16
+        sze = 64
         playerSur = pygame.Surface((sze, sze), pygame.SRCALPHA)
         pygame.draw.circle(playerSur, (0, 0, 0), (sze/2, sze/2), sze/2-1)
         pygame.draw.circle(playerSur, (255, 255, 255), (sze/2, sze/2), sze/2-1, 2)

@@ -4550,7 +4550,7 @@
 			"enumTags": [],
 			"customData": [],
 			"savedSelections": [],
-			"cachedPixelData": { "opaqueTiles": "000000000000000", "averageColors": "2bcb5dca0fff5ccaddd91baa0eee28a80fff67a72aa900001aba0bbb0000" }
+			"cachedPixelData": { "opaqueTiles": "000000000000000", "averageColors": "2bcb5dca0fff5ccaddd91baa0eee28a80fff67a72aa900001aca0bbb0000" }
 		},
 		{
 			"__cWid": 20,
@@ -4667,7 +4667,7 @@
 					"entityInstances": [
 						{
 							"__identifier": "Player_start",
-							"__grid": [37,25],
+							"__grid": [40,24],
 							"__pivot": [0,0],
 							"__tags": ["nonRender"],
 							"__tile": { "tilesetUid": 86, "x": 80, "y": 48, "w": 16, "h": 16 },
@@ -4676,7 +4676,7 @@
 							"width": 32,
 							"height": 32,
 							"defUid": 6,
-							"px": [592,400],
+							"px": [640,384],
 							"fieldInstances": [
 								{ "__identifier": "DefGravityType", "__type": "LocalEnum.DefGravityType", "__value": "Nearest", "__tile": null, "defUid": 128, "realEditorValues": [{
 									"id": "V_String",
@@ -4692,8 +4692,8 @@
 								{ "__identifier": "DefCamDist", "__type": "Float", "__value": 2, "__tile": null, "defUid": 134, "realEditorValues": [{ "id": "V_Float", "params": [2] }] },
 								{ "__identifier": "DefGravityStr", "__type": "Float", "__value": 0.5, "__tile": null, "defUid": 155, "realEditorValues": [{ "id": "V_Float", "params": [0.5] }] }
 							],
-							"__worldX": 592,
-							"__worldY": 400
+							"__worldX": 640,
+							"__worldY": 384
 						}
 					]
 				},
