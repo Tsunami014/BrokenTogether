@@ -94,7 +94,7 @@ def CollProcessor(e):
     elif e.defData['renderMode'] == 'Rectangle':
         return collisions.Rect(*e.ScaledPos, e.width, e.height)
 
-class BaseEntity(Ss.BaseEntity):
+class BaseEntity(Ss.AdvBaseEntity):
     def __init__(self, Game, entity):
         super().__init__(Game, entity)
         # Each value is in units per second unless specified
@@ -110,7 +110,7 @@ class BaseEntity(Ss.BaseEntity):
         self.jump = 9 # Change in velocity when jumping
         self.grav_amount = 15.0 # Gravity strength
 
-        self.hitSize = 32 # Radius of circle hitbox
+        self.hitSize = 24 # Radius of circle hitbox
 
         self.grav_str = 1
         self.grav_change = 0.08
@@ -347,7 +347,7 @@ class MainGameScene(Ss.BaseScene):
     def postProcessGlobal(self, sur):
         return self._Rotate(sur)
     
-    def postProcessScreen(self, sur):
+    def postProcessScreen(self, sur, diff):
         screenCentre = self.getScreenRect().center
         playerCentre = self.getCloseRect().center
         diff = (
@@ -358,7 +358,7 @@ class MainGameScene(Ss.BaseScene):
         # Basically, where it is (which may change later) - where it should be (in the centre)
         playerPos = ((centre[0]-diff[0])/self.CamDist, (centre[1]-diff[1])/self.CamDist)
 
-        sze = 64
+        sze = 48
         playerSur = pygame.Surface((sze, sze), pygame.SRCALPHA)
         pygame.draw.circle(playerSur, (0, 0, 0), (sze/2, sze/2), sze/2-1)
         pygame.draw.circle(playerSur, (255, 255, 255), (sze/2, sze/2), sze/2-1, 2)
