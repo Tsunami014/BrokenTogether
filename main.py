@@ -40,20 +40,20 @@ class MapScreen(Screen):
     def _LoadUI(self):
         self.layers[0].add('Main')
         LTOP = GO.PNEW((0, 0), (0, 1))
-        t = GUI.Text(self, LTOP, 'Maps:', font=GO.FTITLE)
-        f = GUI.ScrollableFrame(self, LTOP, (self.size[0], self.size[1]-t.size[1]), (0, 0))
+        t = GUI.Text(LTOP, '# Maps:')
+        f = GUI.ScrollableFrame(LTOP, (self.size[0], self.size[1]-t.size[1]), (0, 0))
         self['Main'].extend([t, f])
         f.layers[0].add('Main')
         GRID = GO.PNEW((0, 0), (1, 1))
-        e = GUI.Empty(f, GRID, (10, 10))
-        g = GUI.GridLayout(f, GRID)
+        e = GUI.Empty(GRID, (10, 10))
+        g = GUI.GridLayout(GRID)
         f['Main'].extend([e, g])
         rainbow = GO.CRAINBOW()
         def func(lvl):
             load_level(lvl)
             self.Abort()
         btns = [
-            GUI.Button(g, g.LP, next(rainbow), i, func=lambda lvl=i: func(lvl))
+            GUI.Button(g.LP, next(rainbow), i, func=lambda lvl=i: func(lvl))
             for i in find_maps()
         ]
         cols = math.ceil(math.sqrt(len(btns)))
@@ -97,16 +97,17 @@ def CollProcessor(e):
 class BaseEntity(Ss.AdvBaseEntity):
     def __init__(self, Game, entity):
         super().__init__(Game, entity)
+        self.canSpin = True
         # Each value is in units per second unless specified
         self.max_speed = 15  # Max speed
         self.max_grav_speed = 15 # Max speed the gravity can get you
-        self.friction = 1.0  # Friction perpendicular to or if no grav (applied each frame) (in percent of current speed)
+        self.friction = 0.8  # Friction perpendicular to or if no grav (applied each frame) (in percent of current speed)
         self.grav_fric = 0.7 # Friction applied in gravity direction (each frame) (in percent of current gravity strength)
         self.not_hold_fric = 0.7 # ADDED friction to apply when not holding ANY KEY (you can modify this to be only left-right or whatever) (in percent of current speed)
         self.not_hold_grav = [0.2, 0.2] # Decrease in gravity to apply when holding THE UP KEY (in percent of current gravity strength)
 
-        self.movement = 0.6 # How much you move left/right each frame
-        self.movement_decrease = 0.15 # How much to decrease the speed of horizontal movement by (in % current speed)
+        self.movement = 1 # How much you move left/right each frame
+        self.move_vel = [0, 0]
         self.jump = 9 # Change in velocity when jumping
         self.grav_amount = 15.0 # Gravity strength
 
@@ -140,6 +141,9 @@ class BaseEntity(Ss.AdvBaseEntity):
             colls = self.Game.currentScene.collider()
         else:
             colls = collisions.Shapes()
+        
+        for obj in colls:
+            obj.bounciness = 0.5
 
         self.gravType = None
         self.gravDir = None
@@ -234,29 +238,37 @@ class BaseEntity(Ss.AdvBaseEntity):
         self.holding_jmp = keys[pygame.K_UP]
         self.holding_any = keys[pygame.K_LEFT] or keys[pygame.K_RIGHT] or self.holding_jmp
         jmp = any(e.type == pygame.KEYDOWN and e.key == pygame.K_UP for e in evs.copy())
-        spin = any(e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE for e in evs)
-        offs = [(0, 0)]
+        spin = any(e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE for e in evs) and self.canSpin
+        offs = (0, 0)
         if jmp:
             gravdir = collisions.direction((0, 0), self.gravity)
             off = collisions.rotateBy0((self.hitSize*1.5, 0), math.degrees(gravdir))
             if collisions.Line(oldPos, (oldPos[0]+off[0], oldPos[1]+off[1])).collides(colls):
-                offs.append(collisions.rotateBy0((0, -self.jump), norm + (180 if invert else 0)))
+                offs = collisions.rotateBy0((0, -self.jump), norm + (180 if invert else 0))
         if keys[pygame.K_LEFT] ^ keys[pygame.K_RIGHT]:
-            velAmnt = math.hypot(*self.velocity)
-            decrease = self.movement_decrease * velAmnt
-            mvement = max(self.movement - decrease, 0)
-            if mvement > 0:
+            if self.movement > 0:
                 if keys[pygame.K_LEFT]:
-                    offs.append(collisions.rotateBy0((-mvement, -self.upforce), norm))
+                    side = collisions.rotateBy0((-self.movement, -self.upforce), norm)
                 else:
-                    offs.append(collisions.rotateBy0((mvement, -self.upforce), norm))
-        off = (sum(i[0] for i in offs), sum(i[1] for i in offs))
-        self.velocity = [self.velocity[0] + off[0],
-                         self.velocity[1] + off[1]]
+                    side = collisions.rotateBy0((self.movement, -self.upforce), norm)
+                self.move_vel[0] += side[0]
+                self.move_vel[1] += side[1]
+        self.move_vel = [
+            min(max(self.move_vel[0] * self.friction, -self.max_speed), self.max_speed),
+            min(max(self.move_vel[1] * self.friction, -self.max_speed), self.max_speed)
+        ]
+        out, self.move_vel, vo = thisObj.handleCollisionsVel(self.move_vel, colls, verbose=True)
+        if vo[0]:
+            self.canSpin = True
+        self.velocity = [self.velocity[0] + offs[0],
+                         self.velocity[1] + offs[1]]
         if spin:
+            self.canSpin = False
             self.velocity = collisions.rotateBy0((0, -self.jump), norm + (180 if invert else 0))
         self.apply_physics()
-        outRect, self.velocity = thisObj.handleCollisionsVel(self.velocity, colls, False)
+        outRect, self.velocity, vo = thisObj.handleCollisionsVel(self.velocity, colls, False, verbose=True)
+        if vo[0]:
+            self.canSpin = True
         self.pos = self.entity.unscale_pos(outRect)
     
     @property
