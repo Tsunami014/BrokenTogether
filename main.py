@@ -76,15 +76,15 @@ class DebugCommands:
     
     def toggleColls(self, *args):
         self.showingColls = not self.showingColls
-        G.UILayer.append(GUI.Toast(G, ('Showing' if self.showingColls else 'Not showing') + ' collisions'))
+        G.UILayer.append(GUI.Toast(('Showing' if self.showingColls else 'Not showing') + ' collisions'))
     
     def toggleIgnore(self, *args):
         self.colliding = not self.colliding
-        G.UILayer.append(GUI.Toast(G, ('Applying' if self.colliding else 'Ignoring') + ' collisions'))
+        G.UILayer.append(GUI.Toast(('Applying' if self.colliding else 'Ignoring') + ' collisions'))
     
     def toggleFPS(self, *args):
         self.showFPS = not self.showFPS
-        G.UILayer.append(GUI.Toast(G, ('Showing' if self.showFPS else 'Hiding')+' FPS'))
+        G.UILayer.append(GUI.Toast(('Showing' if self.showFPS else 'Hiding')+' FPS'))
 
 debug = DebugCommands(G)
 
@@ -135,6 +135,11 @@ class BaseEntity(Ss.AdvBaseEntity):
             return fields[0] if fields else None
         collEs = [i for i in es if transform[i].collides(thisObj)]
         collEs.sort(key=lambda x: (-findFieldInstance(x, 'Layer')))
+
+        if debug.colliding:
+            colls = self.Game.currentScene.collider()
+        else:
+            colls = collisions.Shapes()
 
         self.gravType = None
         self.gravDir = None
@@ -228,37 +233,29 @@ class BaseEntity(Ss.AdvBaseEntity):
         keys = pygame.key.get_pressed()
         self.holding_jmp = keys[pygame.K_UP]
         self.holding_any = keys[pygame.K_LEFT] or keys[pygame.K_RIGHT] or self.holding_jmp
-        jmp = any(e.type == pygame.KEYDOWN and e.key == pygame.K_UP for e in evs)
+        jmp = any(e.type == pygame.KEYDOWN and e.key == pygame.K_UP for e in evs.copy())
         spin = any(e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE for e in evs)
-        if keys[pygame.K_LEFT] ^ keys[pygame.K_RIGHT] or jmp or spin:
-            offs = [(0, 0)]
-            if jmp:
+        offs = [(0, 0)]
+        if jmp:
+            gravdir = collisions.direction((0, 0), self.gravity)
+            off = collisions.rotateBy0((self.hitSize*1.5, 0), math.degrees(gravdir))
+            if collisions.Line(oldPos, (oldPos[0]+off[0], oldPos[1]+off[1])).collides(colls):
                 offs.append(collisions.rotateBy0((0, -self.jump), norm + (180 if invert else 0)))
-            if spin:
-                gx, gy = self.gravity
-                mag2 = gx * gx + gy * gy
-                if mag2 != 0:
-                    dot = self.velocity[0] * gx + self.velocity[1] * gy
-                    self.velocity[0] -= (dot / mag2) * gx
-                    self.velocity[1] -= (dot / mag2) * gy
-                offs.append(collisions.rotateBy0((0, -self.jump), norm + (180 if invert else 0)))
-            if keys[pygame.K_LEFT] or keys[pygame.K_RIGHT]:
-                velAmnt = math.hypot(*self.velocity)
-                decrease = self.movement_decrease * velAmnt
-                mvement = max(self.movement - decrease, 0)
-                if mvement > 0:
-                    if keys[pygame.K_LEFT]:
-                        offs.append(collisions.rotateBy0((-mvement, -self.upforce), norm))
-                    else:
-                        offs.append(collisions.rotateBy0((mvement, -self.upforce), norm))
-            off = (sum(i[0] for i in offs), sum(i[1] for i in offs))
-            self.velocity = [self.velocity[0] + off[0],
-                                self.velocity[1] + off[1]]
+        if keys[pygame.K_LEFT] ^ keys[pygame.K_RIGHT]:
+            velAmnt = math.hypot(*self.velocity)
+            decrease = self.movement_decrease * velAmnt
+            mvement = max(self.movement - decrease, 0)
+            if mvement > 0:
+                if keys[pygame.K_LEFT]:
+                    offs.append(collisions.rotateBy0((-mvement, -self.upforce), norm))
+                else:
+                    offs.append(collisions.rotateBy0((mvement, -self.upforce), norm))
+        off = (sum(i[0] for i in offs), sum(i[1] for i in offs))
+        self.velocity = [self.velocity[0] + off[0],
+                         self.velocity[1] + off[1]]
+        if spin:
+            self.velocity = collisions.rotateBy0((0, -self.jump), norm + (180 if invert else 0))
         self.apply_physics()
-        if debug.colliding:
-            colls = self.Game.currentScene.collider()
-        else:
-            colls = collisions.Shapes()
         outRect, self.velocity = thisObj.handleCollisionsVel(self.velocity, colls, False)
         self.pos = self.entity.unscale_pos(outRect)
     
@@ -370,8 +367,9 @@ class MainGameScene(Ss.BaseScene):
         # sur.blit(pygame.font.Font(None, 30).render(str(self.Game.deltaTime), True, (255, 255, 255)), (0, 30))
         # vel = collisions.rotateBy0(player.velocity, -self.lastGrav)
         # pygame.draw.line(sur, (125, 125, 125), playerPos, (playerPos[0]+vel[0]*10, playerPos[1]+vel[1]*10), 2)
-        # grav = collisions.rotateBy0(player.gravity, -self.lastCam)
-        # pygame.draw.line(sur, (125, 125, 125), playerPos, (playerPos[0]+grav[0]*100, playerPos[1]+grav[1]*100), 2)
+        # gravdir = collisions.direction((0, 0), self.entities[0].gravity)
+        # off = collisions.rotateBy0((self.entities[0].hitSize*1.5, 0), math.degrees(gravdir)-self.lastCam)
+        # pygame.draw.line(sur, (125, 125, 125), playerPos, (playerPos[0]+off[0], playerPos[1]+off[1]), 2)
 
         # FPS
         if debug.showFPS:
