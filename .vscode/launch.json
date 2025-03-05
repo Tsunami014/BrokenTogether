@@ -28,14 +28,23 @@
             "args": ["run_sync"],
             "console": "integratedTerminal",
             "justMyCode": false,
-            "cwd": "${workspaceFolder}/assets/maps/${input:folderName}"
+            "cwd": "${workspaceFolder}/assets/maps/${input:mapName}"
+        },
+        {
+            "name": "Make a new map",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/format.py",
+            "args": ["new", "${input:mapName}"],
+            "console": "integratedTerminal",
+            "justMyCode": false,
         }
     ],
     "inputs": [
         {
-            "id": "folderName",
+            "id": "mapName",
             "type": "promptString",
-            "description": "Enter the folder name"
+            "description": "Enter the folder name for the map"
         }
     ]
 }

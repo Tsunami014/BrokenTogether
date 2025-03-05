@@ -37,7 +37,7 @@ class Chooser(Screen):
     
     def _LoadUI(self):
         self.layers[0].add('Main')
-        btn = GUI.Button(self, GO.PCCENTER, GO.CBLACK, "ALL!!!", GO.CWHITE)
+        btn = GUI.Button(GO.PCCENTER, GO.CBLACK, "ALL!!!", GO.CWHITE)
         btn.lvl = None
         self['Main'].append(btn)
         rainbow = GO.CRAINBOW()
@@ -45,7 +45,7 @@ class Chooser(Screen):
             lvlObj = world.ldtk.levels[lvl]
             for e in lvlObj.entities:
                 if e.identifier == 'WrapSettings':
-                    btn = GUI.Button(self, GO.PCCENTER, next(rainbow), (lvlObj.identifier))
+                    btn = GUI.Button(GO.PCCENTER, next(rainbow), (lvlObj.identifier))
                     self.opts.append(lvl)
                     btn.lvl = lvl
                     self['Main'].append(btn)

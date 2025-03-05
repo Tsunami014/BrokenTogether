@@ -198,7 +198,11 @@ class BaseEntity(Ss.AdvBaseEntity):
                 self.gravity = collisions.pointOnCircle(math.radians(self.gravDir+90), self.grav_amount*self.grav_str)
                 norm = self.gravDir
             case 'Nearest':
-                cpoints = [(i.closestPointTo(thisObj), i) for e, i in transform.items() if 'Gravity' in e.identifier]
+                if es == []:
+                    self.gravity = [0, 0]
+                    norm = math.degrees(collisions.direction((0, 0), self.velocity))-90
+                else:
+                    cpoints = [(i.closestPointTo(thisObj), i) for e, i in transform.items() if 'Gravity' in e.identifier]
             case 'NoGrav':
                 self.gravity = [0, 0]
                 norm = math.degrees(collisions.direction((0, 0), self.velocity))-90
@@ -286,11 +290,12 @@ class MainGameScene(Ss.BaseScene):
         self.off = [0, 0]
         self.lastCam = None
         self.playerRot = None
-        self.playerSur = pygame.image.load('assets/characters/Ether2.png')
+        self.playerSur = pygame.image.load('assets/characters/Ether.png')
         self.CamDist = 4
+        self.startingCamDist = True
         self.CamChangeSpeed = 0.1
         self.CamBounds = [None, None, None, None]
-        es = self.currentLvl.GetEntitiesByUID(6) # The Player
+        es = self.currentLvl.GetEntitiesByUID(64) # The Player
         if es:
             e = BaseEntity(Game, es[0])
             self.entities.append(e)
@@ -461,15 +466,16 @@ class MainGameScene(Ss.BaseScene):
     def render(self):
         nCamDist = self.entities[0].camDist
         if nCamDist:
-            self.CamDist = min(max(nCamDist, self.CamDist-self.CamChangeSpeed), self.CamDist+self.CamChangeSpeed)
+            if self.startingCamDist:
+                self.startingCamDist = False
+                self.CamDist = nCamDist
+            else:
+                self.CamDist = min(max(nCamDist, self.CamDist-self.CamChangeSpeed), self.CamDist+self.CamChangeSpeed)
 
         if self.sur is not None and debug.showingColls == self.showingColls:
             return self.sur
         self.showingColls = debug.showingColls
         self.sur = self.Game.world.get_pygame(self.lvl, True)
-        for e in self.Game.world.get_level(self.lvl).entities:
-            if e.layerId.startswith('Entities'):
-                self.sur.blit(e.get_tile(), e.ScaledPos)
         if self.showingColls:
             for col, li in (
                     ((255, 10, 50), self.collider()), 
