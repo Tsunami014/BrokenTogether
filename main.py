@@ -285,6 +285,8 @@ class MainGameScene(Ss.BaseScene):
         self._collider = None
         self.off = [0, 0]
         self.lastCam = None
+        self.playerRot = None
+        self.playerSur = pygame.image.load('assets/characters/Ether2.png')
         self.CamDist = 4
         self.CamChangeSpeed = 0.1
         self.CamBounds = [None, None, None, None]
@@ -367,19 +369,25 @@ class MainGameScene(Ss.BaseScene):
         # Basically, where it is (which may change later) - where it should be (in the centre)
         playerPos = ((centre[0]-diff[0])/self.CamDist, (centre[1]-diff[1])/self.CamDist)
 
-        sze = 48
-        playerSur = pygame.Surface((sze, sze), pygame.SRCALPHA)
-        pygame.draw.circle(playerSur, (0, 0, 0), (sze/2, sze/2), sze/2-1)
-        pygame.draw.circle(playerSur, (255, 255, 255), (sze/2, sze/2), sze/2-1, 2)
-        playerSur = pygame.transform.rotozoom(playerSur, -self.lastCam%45+22.5, 1) # smooth
-        # playerSur = pygame.transform.rotate(playerSur, -self.lastGrav) # pixelated
+        gravdir = math.degrees(collisions.direction((0, 0), self.entities[0].gravity))-90
+        if self.playerRot is None:
+            self.playerRot = gravdir % 360
+        else:
+            angOpts = [gravdir, gravdir - 360, gravdir + 360]
+            ncamang = min(angOpts, key=lambda x: abs(x - self.playerRot))
+            self.playerRot = (self.playerRot-ncamang)*(9/10)+ncamang
+            self.playerRot %= 360
+        
+        playerSur = pygame.transform.rotozoom(self.playerSur, self.lastCam-self.playerRot, 1) # smooth
+        # playerSur = pygame.transform.rotate(self.playerSur, self.playerRot-self.lastCam) # pixelated
+        # pygame.draw.circle(playerSur, (0, 0, 0), (sze/2, sze/2), sze/2-1)
+        # pygame.draw.circle(playerSur, (255, 255, 255), (sze/2, sze/2), sze/2-1, 2)
         sur.blit(playerSur, (playerPos[0]-playerSur.get_width()/2, playerPos[1]-playerSur.get_height()/2))
 
         # Debugging scripts
         # sur.blit(pygame.font.Font(None, 30).render(str(self.Game.deltaTime), True, (255, 255, 255)), (0, 30))
         # vel = collisions.rotateBy0(player.velocity, -self.lastGrav)
         # pygame.draw.line(sur, (125, 125, 125), playerPos, (playerPos[0]+vel[0]*10, playerPos[1]+vel[1]*10), 2)
-        # gravdir = collisions.direction((0, 0), self.entities[0].gravity)
         # off = collisions.rotateBy0((self.entities[0].hitSize*1.5, 0), math.degrees(gravdir)-self.lastCam)
         # pygame.draw.line(sur, (125, 125, 125), playerPos, (playerPos[0]+off[0], playerPos[1]+off[1]), 2)
 
@@ -427,9 +435,8 @@ class MainGameScene(Ss.BaseScene):
             self.lastCam = camang
         else:
             angOpts = [camang, camang - 360, camang + 360]
-            camang = min(angOpts, key=lambda x: abs(x - self.lastCam))
-            # TODO: When we have a player sprite, make the camera spin *after* the player's spin animation
-            self.lastCam = (self.lastCam-camang)*(14/15)+camang
+            ncamang = min(angOpts, key=lambda x: abs(x - self.lastCam))
+            self.lastCam = (self.lastCam-ncamang)*(14/15)+ncamang
             self.lastCam %= 360
     
         rect = self.getCloseRect()
