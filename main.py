@@ -243,12 +243,6 @@ class BaseEntity(Ss.AdvBaseEntity):
         self.holding_any = keys[pygame.K_LEFT] or keys[pygame.K_RIGHT] or self.holding_jmp
         jmp = any(e.type == pygame.KEYDOWN and e.key == pygame.K_UP for e in evs.copy())
         spin = any(e.type == pygame.KEYDOWN and e.key == pygame.K_SPACE for e in evs) and self.canSpin
-        offs = (0, 0)
-        if jmp:
-            gravdir = collisions.direction((0, 0), self.gravity)
-            off = collisions.rotateBy0((self.hitSize*1.5, 0), math.degrees(gravdir))
-            if collisions.Line(oldPos, (oldPos[0]+off[0], oldPos[1]+off[1])).collides(colls):
-                offs = collisions.rotateBy0((0, -self.jump), norm + (180 if invert else 0))
         if keys[pygame.K_LEFT] ^ keys[pygame.K_RIGHT]:
             if self.movement > 0:
                 if keys[pygame.K_LEFT]:
@@ -264,8 +258,26 @@ class BaseEntity(Ss.AdvBaseEntity):
         out, self.move_vel, vo = thisObj.handleCollisionsVel(self.move_vel, colls, verbose=True)
         if vo[0]:
             self.canSpin = True
-        self.velocity = [self.velocity[0] + offs[0],
-                         self.velocity[1] + offs[1]]
+        if jmp:
+            gravdir = collisions.direction((0, 0), self.gravity)
+            off = collisions.rotateBy0((self.hitSize*1.5, 0), math.degrees(gravdir))
+            offset_down = collisions.rotateBy0((0, self.hitSize/2), math.degrees(gravdir))
+            rect_origin = (oldPos[0] + offset_down[0], oldPos[1] + offset_down[1])
+            thickness = self.hitSize / 2
+            perp = collisions.rotateBy0((0, thickness), math.degrees(gravdir + 90))
+            p1 = rect_origin
+            p2 = (rect_origin[0] + off[0], rect_origin[1] + off[1])
+            p3 = (p2[0] + perp[0], p2[1] + perp[1])
+            p4 = (rect_origin[0] + perp[0], rect_origin[1] + perp[1])
+            jump_area = collisions.Polygon(p1, p2, p3, p4)
+            if jump_area.collides(colls):
+                jump_angle = norm + (180 if invert else 0)
+                jump_dir = collisions.rotateBy0((0, -1), jump_angle)
+                current_speed = jump_dir[0] * self.velocity[0] + jump_dir[1] * self.velocity[1]
+                effective_jump = self.jump - max(current_speed, 0)
+                effective_jump = max(effective_jump, 0)
+                offs = collisions.rotateBy0((0, -effective_jump), jump_angle)
+                self.velocity = [self.velocity[0] + offs[0], self.velocity[1] + offs[1]]
         if spin:
             self.canSpin = False
             self.velocity = collisions.rotateBy0((0, -self.jump), norm + (180 if invert else 0))
@@ -290,7 +302,7 @@ class MainGameScene(Ss.BaseScene):
         self.off = [0, 0]
         self.lastCam = None
         self.playerRot = None
-        self.playerSur = pygame.image.load('assets/characters/Ether.png')
+        self.playerSur = pygame.image.load('assets/sprites/Ether.png')
         self.CamDist = 4
         self.startingCamDist = True
         self.CamChangeSpeed = 0.1
