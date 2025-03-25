@@ -2,6 +2,31 @@ import pygame
 import random
 import math
 
+class Stars:
+    STARS = {}
+    def __new__(cls, typ):
+        if typ not in cls.STARS:
+            sur = cls._genStar(typ)
+            cls.STARS[typ] = sur
+        return cls.STARS[typ]
+
+    @classmethod
+    def _genStar(cls, typ):
+        col = (random.randint(200, 255), random.randint(200, 255), random.randint(200, 255))
+        sze = (random.randint(0, 3), random.randint(0, 3))
+        sur = pygame.Surface(sze, pygame.SRCALPHA)
+        hx, hy = math.floor(sze[0]/2) or 1, math.floor(sze[1]/2) or 1
+        for x in range(sze[0]):
+            for y in range(sze[1]):
+                alpha = 255-((abs(x-hx)/hx*125)+(abs(y-hy)/hy*125))
+                alpha += random.randint(-50, 50)
+                sur.set_at((x, y), (*col, max(min(alpha, 255), 0)))
+        return sur
+
+    @classmethod
+    def reset(cls):
+        cls.STARS = {}
+
 class BG:
     def __init__(self, 
                  seed=None, 
@@ -11,8 +36,7 @@ class BG:
         self.cache = {}
         state = random.getstate()
         self.seed = seed
-        if seed is not None:
-            random.seed(seed)
+        random.seed(seed)
         
         type = random.randint(0, 2)
         if type == 0:
@@ -29,29 +53,17 @@ class BG:
 
         random.setstate(state)
     
-    def _genStar(self):
-        col = (random.randint(200, 255), random.randint(200, 255), random.randint(200, 255))
-        sze = (random.randint(1, 3), random.randint(1, 3))
-        sur = pygame.Surface(sze, pygame.SRCALPHA)
-        hx, hy = math.floor(sze[0]/2) or 1, math.floor(sze[1]/2) or 1
-        for x in range(sze[0]):
-            for y in range(sze[1]):
-                alpha = 255-((abs(x-hx)/hx*125)+(abs(y-hy)/hy*125))
-                alpha += random.randint(-20, 20)
-                sur.set_at((x, y), (*col, max(min(alpha, 255), 0)))
-        return sur
-    
     def _gen(self, sze, x, y, z):
         sur = pygame.Surface(sze)
         sur.fill(self.base)
-        if self.seed is not None:
-            random.seed(self.seed)
+        random.seed(self.seed)
+        Stars.reset()
         
         totPxs = sze[0]*sze[1]
         stars = random.sample(range(totPxs), random.randint(totPxs//100, totPxs//50))
         for st in stars:
             x, y = st%sze[0], math.floor(st/sze[0])
-            stSur = self._genStar()
+            stSur = Stars(random.randint(0, 10))
             sur.blit(stSur, (x-2, y-2))
         return sur
     
@@ -69,6 +81,7 @@ if __name__ == '__main__':
     pygame.init()
     win = pygame.display.set_mode((500, 500), pygame.RESIZABLE)
     x, y, z = 0, 0, 0
+    surZoom = 1
     bg = BG()
     run = True
     while run:
@@ -78,7 +91,7 @@ if __name__ == '__main__':
             elif ev.type == pygame.KEYDOWN:
                 if ev.key == pygame.K_ESCAPE:
                     run = False
-                elif ev.key == pygame.K_SPACE:
+                elif ev.key == pygame.K_SPACE or ev.key == pygame.K_RETURN:
                     bg = BG()
         
         keys = pygame.key.get_pressed()
@@ -94,6 +107,11 @@ if __name__ == '__main__':
             z -= 1
         elif keys[pygame.K_PERIOD]:
             z += 1
+        if keys[pygame.K_MINUS]:
+            surZoom += 0.005
+        elif keys[pygame.K_EQUALS]:
+            surZoom -= 0.005
+        surZoom = max(min(surZoom, 1), 0.1)
         
-        win.blit(bg(win.get_size(), x, y, z), (0, 0))
+        win.blit(pygame.transform.scale(bg((int(win.get_width()*surZoom), int(win.get_height()*surZoom)), x, y, z), win.get_size()), (0, 0))
         pygame.display.flip()
