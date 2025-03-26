@@ -1,86 +1,109 @@
+import numpy as np
 import pygame
 import random
 import math
+import sys
 
 class Stars:
-    STARS = {}
-    def __new__(cls, typ):
-        if typ not in cls.STARS:
-            sur = cls._genStar(typ)
-            cls.STARS[typ] = sur
-        return cls.STARS[typ]
-
-    @classmethod
-    def _genStar(cls, typ):
-        col = (random.randint(200, 255), random.randint(200, 255), random.randint(200, 255))
-        sze = (random.randint(0, 3), random.randint(0, 3))
+    def __init__(self, rng):
+        self.STARS = {}
+        self.rng = rng
+    
+    def __call__(self, typ):
+        if typ not in self.STARS:
+            sur = self._genStar()
+            self.STARS[typ] = sur
+        return self.STARS[typ]
+    
+    def _genStar(self):
+        col = (self.rng.randint(200, 255), self.rng.randint(200, 255), self.rng.randint(200, 255))
+        sze = (self.rng.randint(0, 3), self.rng.randint(0, 3))
         sur = pygame.Surface(sze, pygame.SRCALPHA)
         hx, hy = math.floor(sze[0]/2) or 1, math.floor(sze[1]/2) or 1
         for x in range(sze[0]):
             for y in range(sze[1]):
-                alpha = 255-((abs(x-hx)/hx*125)+(abs(y-hy)/hy*125))
-                alpha += random.randint(-50, 50)
+                alpha = 255 - ((abs(x-hx)/hx*125) + (abs(y-hy)/hy*125))
+                alpha += self.rng.randint(-50, 50)
                 sur.set_at((x, y), (*col, max(min(alpha, 255), 0)))
         return sur
 
-    @classmethod
-    def reset(cls):
-        cls.STARS = {}
-
 class BG:
-    def __init__(self, 
-                 seed=None, 
-                 /, 
-                 max_red_diff=30
-            ):
+    def __init__(self, seed=None, /, max_red_diff=30, star_chance=None):
         self.cache = {}
-        state = random.getstate()
+        if seed is None:
+            seed = random.randrange(sys.maxsize)
         self.seed = seed
-        random.seed(seed)
         
-        type = random.randint(0, 2)
+        self.rng = random.Random(seed)
+        self.startState = self.rng.getstate()
+
+        self.stars = Stars(self.rng)
+        if star_chance is None:
+            star_chance = random.randint(10, 40)
+        self.starChance = star_chance
+        
+        type = self.rng.randint(0, 2)
         if type == 0:
-            diff = random.randint(20, 120)
-            diff2 = random.randint(0, diff)
+            diff = self.rng.randint(20, 120)
+            diff2 = self.rng.randint(0, diff)
             self.base = (diff2, diff-diff2, 255-diff)
-        elif type >= 1:
-            blu = random.randint(0, 100)
-            diff = random.randint(0, blu)
+        else:
+            blu = self.rng.randint(0, 100)
+            diff = self.rng.randint(0, blu)
             self.base = (diff, blu-diff, blu)
         
         if self.base[0] + max_red_diff >= self.base[2]:
             self.base = (max(self.base[2]-max_red_diff, 0), self.base[1], self.base[2])
-
-        random.setstate(state)
     
-    def _gen(self, sze, x, y, z):
+    def _setState(self):
+        self.rng.setstate(self.startState)
+    
+    def _gen(self, sze, x, y):
         sur = pygame.Surface(sze)
         sur.fill(self.base)
-        random.seed(self.seed)
-        Stars.reset()
+        self._setState()
         
-        totPxs = sze[0]*sze[1]
-        stars = random.sample(range(totPxs), random.randint(totPxs//100, totPxs//50))
-        for st in stars:
-            x, y = st%sze[0], math.floor(st/sze[0])
-            stSur = Stars(random.randint(0, 10))
-            sur.blit(stSur, (x-2, y-2))
+        # Create a meshgrid of coordinates (note: use 'xy' indexing so xs vary along columns)
+        # Use np.uint64 for the coordinate arrays.
+        xs = np.arange(x, x + sze[0], dtype=np.int64)
+        ys = np.arange(y, y + sze[1], dtype=np.int64)
+        grid_x, grid_y = np.meshgrid(xs, ys, indexing='xy')
+        # Shift negatives into the positive range before converting to uint64
+        grid_x = (grid_x + (1 << 15)).astype(np.uint64)
+        grid_y = (grid_y + (1 << 15)).astype(np.uint64)
+        
+        # Compute the hash using vectorized arithmetic in np.uint64.
+        n = (grid_x * np.uint64(374761393)) ^ (grid_y * np.uint64(668265263)) ^ (np.uint64(self.seed) * np.uint64(982451653))
+        n = (n ^ (n >> np.uint64(13))) * np.uint64(1274126177)
+        n = n ^ (n >> np.uint64(16))
+        rnds = n & np.uint64(0x7fffffff)
+        
+        # Find indices where the condition is met
+        mask = (rnds % self.starChance == 0)
+        ys_idx, xs_idx = np.nonzero(mask)
+        
+        # Loop only over the positions that need a star drawn.
+        for row, col in zip(ys_idx, xs_idx):
+            # Use the computed random value to select a star surface.
+            star_index = (rnds[row, col] // self.starChance) % 10
+            stSur = self.stars(star_index)
+            # Blit the star with appropriate offset.
+            sur.blit(stSur, (col - 2, row - 2))
+
         return sur
     
-    def __call__(self, sze, x, y, z):
-        check = hash((sze, x, y, z))
+    def __call__(self, sze, x, y):
+        check = hash((sze, x, y))
         if check in self.cache:
             return self.cache[check]
-        state = random.getstate()
-        sur = self._gen(sze, x, y, z)
-        random.setstate(state)
+        sur = self._gen(sze, x, y)
         self.cache[check] = sur
         return sur
 
 if __name__ == '__main__':
     pygame.init()
     win = pygame.display.set_mode((500, 500), pygame.RESIZABLE)
-    x, y, z = 0, 0, 0
+    x, y, = 0, 0
     surZoom = 1
     bg = BG()
     run = True
@@ -96,22 +119,21 @@ if __name__ == '__main__':
         
         keys = pygame.key.get_pressed()
         if keys[pygame.K_UP]:
-            y -= 1
+            y -= 10*surZoom
         elif keys[pygame.K_DOWN]:
-            y += 1
+            y += 10*surZoom
         if keys[pygame.K_LEFT]:
-            x -= 1
+            x -= 10*surZoom
         elif keys[pygame.K_RIGHT]:
-            x += 1
-        if keys[pygame.K_COMMA]:
-            z -= 1
-        elif keys[pygame.K_PERIOD]:
-            z += 1
+            x += 10*surZoom
         if keys[pygame.K_MINUS]:
-            surZoom += 0.005
+            surZoom += 0.02
         elif keys[pygame.K_EQUALS]:
-            surZoom -= 0.005
+            surZoom -= 0.02
         surZoom = max(min(surZoom, 1), 0.1)
         
-        win.blit(pygame.transform.scale(bg((int(win.get_width()*surZoom), int(win.get_height()*surZoom)), x, y, z), win.get_size()), (0, 0))
+        win.blit(pygame.transform.scale(
+            bg((int(win.get_width()*surZoom), int(win.get_height()*surZoom)), x, y),
+            win.get_size()),
+            (0, 0))
         pygame.display.flip()
