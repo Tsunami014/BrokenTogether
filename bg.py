@@ -6,13 +6,14 @@ import sys
 
 class Stars:
     def __init__(self, rng):
-        self.STARS = {}
+        self.STARS = []
         self.rng = rng
     
     def __call__(self, typ):
-        if typ not in self.STARS:
-            sur = self._genStar()
-            self.STARS[typ] = sur
+        try:
+            return self.STARS[typ]
+        except IndexError:
+            self.STARS += [self._genStar() for _ in range(typ-len(self.STARS)+1)]
         return self.STARS[typ]
     
     def _genStar(self):
@@ -28,7 +29,13 @@ class Stars:
         return sur
 
 class BG:
-    def __init__(self, seed=None, /, max_red_diff=30, star_chance=None):
+    def __init__(self, 
+                 seed=None, 
+                 /, 
+                 max_red_diff=None, 
+                 star_chance=None,
+                 star_amount=None
+        ):
         self.cache = {}
         if seed is None:
             seed = random.randrange(sys.maxsize)
@@ -41,6 +48,11 @@ class BG:
         if star_chance is None:
             star_chance = random.randint(10, 40)
         self.starChance = star_chance
+
+        if star_amount is None:
+            star_amount = self.rng.randint(8, 15)
+        self.star_amount = star_amount
+        self.stars.STARS = [self.stars._genStar() for _ in range(star_amount)]
         
         type = self.rng.randint(0, 2)
         if type == 0:
@@ -51,6 +63,9 @@ class BG:
             blu = self.rng.randint(0, 100)
             diff = self.rng.randint(0, blu)
             self.base = (diff, blu-diff, blu)
+        
+        if max_red_diff is None:
+            max_red_diff = self.rng.randint(20, 40)
         
         if self.base[0] + max_red_diff >= self.base[2]:
             self.base = (max(self.base[2]-max_red_diff, 0), self.base[1], self.base[2])
@@ -63,32 +78,31 @@ class BG:
         sur.fill(self.base)
         self._setState()
         
-        # Create a meshgrid of coordinates (note: use 'xy' indexing so xs vary along columns)
-        # Use np.uint64 for the coordinate arrays.
+        # Create meshgrid with xy indexing
         xs = np.arange(x, x + sze[0], dtype=np.int64)
         ys = np.arange(y, y + sze[1], dtype=np.int64)
         grid_x, grid_y = np.meshgrid(xs, ys, indexing='xy')
-        # Shift negatives into the positive range before converting to uint64
         grid_x = (grid_x + (1 << 15)).astype(np.uint64)
         grid_y = (grid_y + (1 << 15)).astype(np.uint64)
-        
-        # Compute the hash using vectorized arithmetic in np.uint64.
-        n = (grid_x * np.uint64(374761393)) ^ (grid_y * np.uint64(668265263)) ^ (np.uint64(self.seed) * np.uint64(982451653))
+
+        # Compute the hash using vectorized arithmetic
+        n = (grid_x * np.uint64(374761393)) + (grid_y * np.uint64(668265263)) + (np.uint64(self.seed) * np.uint64(982451653))
         n = (n ^ (n >> np.uint64(13))) * np.uint64(1274126177)
-        n = n ^ (n >> np.uint64(16))
         rnds = n & np.uint64(0x7fffffff)
-        
-        # Find indices where the condition is met
+
         mask = (rnds % self.starChance == 0)
         ys_idx, xs_idx = np.nonzero(mask)
         
-        # Loop only over the positions that need a star drawn.
-        for row, col in zip(ys_idx, xs_idx):
-            # Use the computed random value to select a star surface.
-            star_index = (rnds[row, col] // self.starChance) % 10
-            stSur = self.stars(star_index)
-            # Blit the star with appropriate offset.
-            sur.blit(stSur, (col - 2, row - 2))
+        if ys_idx.size == 0:
+            return sur
+
+        # Compute star types and positions for all stars
+        star_types = ((rnds[ys_idx, xs_idx] // self.starChance) % self.star_amount).astype(int)
+        positions = list(zip(xs_idx - 2, ys_idx - 2))
+        
+        star_surs = self.stars.STARS
+        blit_list = [(star_surs[star_types[idx]], positions[idx]) for idx in range(len(positions))]
+        sur.blits(blit_list)
 
         return sur
     
@@ -106,6 +120,7 @@ if __name__ == '__main__':
     x, y, = 0, 0
     surZoom = 1
     bg = BG()
+    clock = pygame.time.Clock()
     run = True
     while run:
         for ev in pygame.event.get():
@@ -136,4 +151,6 @@ if __name__ == '__main__':
             bg((int(win.get_width()*surZoom), int(win.get_height()*surZoom)), x, y),
             win.get_size()),
             (0, 0))
-        pygame.display.flip()
+        pygame.display.update()
+        clock.tick()
+        pygame.display.set_caption(f'FPS: {round(clock.get_fps(), 3)}')
